@@ -3,142 +3,102 @@
 <head>
   <meta charset="UTF-8">
   <title>Trade-ins Market Dashboard</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #d6f5f7, #b3e5fc);
+      background: linear-gradient(135deg, #e0f7fa, #b3e5fc);
       margin: 0;
-      padding: 30px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
       min-height: 100vh;
     }
     h1 {
+      font-size: 2rem;
       color: #003344;
+      margin-bottom: 20px;
       text-align: center;
-      font-size: 2.2rem;
-      margin-bottom: 30px;
-      text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
     }
     .cards-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 15px;
       width: 100%;
-      max-width: 1600px;
-      margin-bottom: 40px;
+      max-width: 1200px;
+      margin-bottom: 30px;
     }
     .card {
       background: rgba(255, 255, 255, 0.2);
-      backdrop-filter: blur(15px);
-      -webkit-backdrop-filter: blur(15px);
-      border-radius: 20px;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      backdrop-filter: blur(12px);
+      border-radius: 15px;
+      padding: 15px;
+      text-align: center;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
       transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
     .card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 14px 40px rgba(0,0,0,0.2);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
     }
-    .card h2 {
-      margin: 0;
-      font-size: 1.2rem;
-      color: #003344;
-      margin-bottom: 10px;
-      text-align: center;
-    }
-    .card p {
-      margin: 0;
-      font-size: 2rem;
-      font-weight: bold;
-      color: #004d66;
-      text-align: center;
-    }
+    .card h2 { margin: 5px 0; font-size: 1rem; color: #003344; }
+    .card p { margin: 0; font-size: 1.4rem; font-weight: bold; color: #004d66; }
     table {
-      border-collapse: collapse;
       width: 100%;
       max-width: 1200px;
+      border-collapse: collapse;
       background: rgba(255,255,255,0.2);
-      backdrop-filter: blur(15px);
-      -webkit-backdrop-filter: blur(15px);
-      border-radius: 15px;
-      overflow: hidden;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
-    }
-    th, td {
-      padding: 12px 15px;
-      text-align: center;
-      color: #003344;
-    }
-    th {
-      background: rgba(0,77,102,0.15);
-    }
-    tr:nth-child(even) {
-      background: rgba(255,255,255,0.1);
-    }
-    tr:hover {
-      background: rgba(0,77,102,0.1);
-    }
-    .download-buttons {
-      display: flex;
-      gap: 15px;
-      margin: 20px 0;
-    }
-    .download-buttons button {
-      padding: 12px 20px;
-      border: none;
-      border-radius: 14px;
-      background: rgba(255,255,255,0.25);
       backdrop-filter: blur(12px);
-      box-shadow: 0 6px 24px rgba(0,0,0,0.15);
-      color: #003344;
-      cursor: pointer;
-      font-weight: 600;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    th, td { padding: 10px 12px; text-align: center; color: #003344; }
+    th { background: rgba(0,77,102,0.15); }
+    tr:nth-child(even) { background: rgba(255,255,255,0.1); }
+    tr.top-performer { background: #d4edda; }
+    tr.middle-performer { background: #fff3cd; }
+    tr.low-performer { background: #f8d7da; }
+    .bar-cell { display: flex; align-items: center; gap: 5px; justify-content: center; }
+    .bar { height: 15px; border-radius: 5px; background: #0077b6; }
+    .download-buttons { display: flex; gap: 10px; margin-bottom: 20px; }
+    .download-buttons button {
+      padding: 10px 15px; border: none; border-radius: 12px;
+      background: rgba(255,255,255,0.25); backdrop-filter: blur(10px);
+      color: #003344; font-weight: 600; cursor: pointer;
       transition: all 0.3s ease;
     }
-    .download-buttons button:hover {
-      background: rgba(255,255,255,0.4);
-      transform: translateY(-2px);
-    }
+    .download-buttons button:hover { background: rgba(255,255,255,0.4); transform: translateY(-2px); }
   </style>
 </head>
 <body>
   <h1>📊 Trade-ins Market Dashboard</h1>
 
-  <!-- Download Buttons -->
   <div class="download-buttons">
     <button id="downloadPNG">⬇️ Download as PNG</button>
     <button id="downloadPDF">⬇️ Download as PDF</button>
   </div>
 
-  <!-- Summary Cards -->
   <div class="cards-grid" id="summary-cards"></div>
 
-  <!-- Market Performance Table -->
   <table id="market-table">
     <thead>
       <tr>
         <th>Market</th>
         <th>Total Trade-ins</th>
-        <th>TI Applied (Sum)</th>
-        <th>Offered (Sum)</th>
+        <th>TI Applied</th>
+        <th>Offered</th>
         <th>Avg TI Applied</th>
         <th>Avg Offered</th>
+        <th>Performance</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
 
-  <!-- Scripts -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
     const googleSheetCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSfrcSWw9-PyEe7nZs-BotPkvTPsln57Ba-2u6AFy8woMG0H21lObx0jMwCbbQYvw/pub?output=csv";
 
@@ -175,22 +135,12 @@
       const avgTI = totalTI / totalTradeins || 0;
       const avgOffered = totalOffered / totalTradeins || 0;
 
-      // Carrier distribution
-      const carrierCounts = {};
-      data.forEach(d => carrierCounts[d.Carrier] = (carrierCounts[d.Carrier] || 0)+1);
-
-      // Make distribution
-      const makeCounts = {};
-      data.forEach(d => makeCounts[d.Make] = (makeCounts[d.Make] || 0)+1);
-
       const cards = [
         {title:"Total Trade-ins", value:totalTradeins},
         {title:"Total TI Applied", value:formatCurrency(totalTI)},
         {title:"Total Offered", value:formatCurrency(totalOffered)},
         {title:"Avg TI Applied", value:formatCurrency(avgTI.toFixed(2))},
-        {title:"Avg Offered", value:formatCurrency(avgOffered.toFixed(2))},
-        {title:"Carrier Count", value:Object.entries(carrierCounts).map(([k,v])=>`${k}: ${v}`).join(", ")},
-        {title:"Make Count", value:Object.entries(makeCounts).map(([k,v])=>`${k}: ${v}`).join(", ")}
+        {title:"Avg Offered", value:formatCurrency(avgOffered.toFixed(2))}
       ];
 
       const container = document.getElementById("summary-cards");
@@ -210,28 +160,42 @@
         const ti = parseFloat((d["TI Applied"]||0).replace(/[$,]/g,""));
         const offered = parseFloat((d["Offered"]||0).replace(/[$,]/g,""));
         if(!marketData[market]) marketData[market]={count:0, ti:0, offered:0};
-        marketData[market].count += 1;
+        marketData[market].count +=1;
         marketData[market].ti += ti;
         marketData[market].offered += offered;
       });
 
-      // Sort markets by TI Applied descending
       const sortedMarkets = Object.entries(marketData).sort((a,b)=>b[1].ti - a[1].ti);
-
       const tbody = document.querySelector("#market-table tbody");
       tbody.innerHTML = "";
-      sortedMarkets.forEach(([market, val])=>{
+      const maxTI = Math.max(...sortedMarkets.map(([m,v])=>v.ti));
+
+      sortedMarkets.forEach(([market, val], idx)=>{
         const avgTI = val.ti / val.count || 0;
         const avgOff = val.offered / val.count || 0;
-        const row = `<tr>
+
+        let perfClass = "low-performer";
+        if(idx<Math.ceil(sortedMarkets.length*0.2)) perfClass="top-performer";
+        else if(idx<Math.ceil(sortedMarkets.length*0.5)) perfClass="middle-performer";
+
+        const barWidth = (val.ti/maxTI)*100;
+
+        const row = document.createElement("tr");
+        row.className = perfClass;
+        row.innerHTML = `
           <td>${market}</td>
           <td>${val.count}</td>
           <td>${formatCurrency(val.ti)}</td>
           <td>${formatCurrency(val.offered)}</td>
           <td>${formatCurrency(avgTI.toFixed(2))}</td>
           <td>${formatCurrency(avgOff.toFixed(2))}</td>
-        </tr>`;
-        tbody.innerHTML += row;
+          <td>
+            <div class="bar-cell">
+              <div class="bar" style="width:${barWidth}%"></div>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(row);
       });
     }
 
@@ -243,27 +207,25 @@
 
     initDashboard();
 
-    // Download as PNG
+    // Download buttons
     document.getElementById("downloadPNG").addEventListener("click", () => {
-      html2canvas(document.body).then(canvas=>{
+      html2canvas(document.body).then(canvas => {
         const link = document.createElement("a");
-        link.download="market_dashboard.png";
-        link.href=canvas.toDataURL("image/png");
+        link.download = "market_dashboard.png";
+        link.href = canvas.toDataURL("image/png");
         link.click();
       });
     });
 
-    // Download as PDF
     document.getElementById("downloadPDF").addEventListener("click", () => {
       html2canvas(document.body).then(canvas=>{
         const imgData = canvas.toDataURL("image/png");
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF("p","mm","a4");
         const pageWidth = pdf.internal.pageSize.getWidth();
-        const pageHeight = pdf.internal.pageSize.getHeight();
-        const imgWidth = pageWidth;
-        const imgHeight = (canvas.height * imgWidth)/canvas.width;
-        pdf.addImage(imgData,"PNG",0,10,imgWidth,imgHeight);
+        const imgWidth = pageWidth - 20;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        pdf.addImage(imgData,"PNG",10,10,imgWidth,imgHeight);
         pdf.save("market_dashboard.pdf");
       });
     });
