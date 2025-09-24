@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Trade-ins Performance Dashboard</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 30px;
+      background: linear-gradient(135deg, #d6f5f7, #b3e5fc);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    h1 {
+      text-align: center;
+      color: #003344;
+      font-size: 2.2rem;
+      margin-bottom: 40px;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+    }
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+      gap: 25px;
+      width: 100%;
+      max-width: 1600px;
+    }
+    .chart {
+      padding: 15px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+      height: 450px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .chart:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.2);
+    }
+    .download-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+    button {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
+      color: #003344;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      margin: 10px;
+    }
+    button:hover {
+      background: rgba(255, 255, 255, 0.4);
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+  <h1>📊 Trade-ins Performance Dashboard</h1>
+
+  <!-- Download buttons -->
+  <div class="download-buttons">
+    <button id="downloadPNG">⬇️ Download as PNG</button>
+    <button id="downloadPDF">⬇️ Download as PDF</button>
+  </div>
+
+  <!-- Chart Containers in Grid -->
+  <div id="dashboard" class="dashboard-grid">
+    <div id="chart1" class="chart"></div>
+    <div id="chart2" class="chart"></div>
+    <div id="chart3" class="chart"></div>
+    <div id="chart4" class="chart"></div>
+    <div id="chart5" class="chart"></div>
+  </div>
+
+  <script>
+    // Google Sheet CSV export link (from your publish URL)
+    const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSfrcSWw9-PyEe7nZs-BotPkvTPsln57Ba-2u6AFy8woMG0H21lObx0jMwCbbQYvw/pub?gid=838451932&single=true&output=csv";
+
+    fetch(sheetUrl)
+      .then(response => response.text())
+      .then(csvText => {
+        const rows = csvText.split("\n").map(r => r.split(","));
+        const headers = rows[0];
+        const data = rows.slice(1).map(row => {
+          let obj = {};
+          headers.forEach((h, i) => obj[h.trim()] = row[i]);
+          return obj;
+        });
+        generateDashboard(data);
+      })
+      .catch(err => console.error("Error loading Google Sheet:", err));
+
+    function generateDashboard(data) {
+      // 1. Trade-in Volume Over Time
+      const dates = data.map(d => new Date(d["Invoice Date"]));
+      const countsByDate = {};
+      dates.forEach(date => {
+        if (!isNaN(date)) {
+          const day = date.toISOString().split("T")[0];
+          countsByDate[day] = (countsByDate[day] || 0) + 1;
+        }
+      });
+
+      Plotly.newPlot("chart1", [{
+        x: Object.keys(countsByDate),
+        y: Object.values(countsByDate),
+        type: "scatter",
+        mode: "markers+lines",
+        name: "Trade-ins",
+        line: {shape: "spline", width: 3}
+      }], {title: "📈 Trade-in Volume Over Time", height: 400});
+
+      // 2. Offered vs TI Applied
+      const offered = data.map(d => parseFloat((d["Offered"] || "0").replace(/[$,]/g, "")));
+      const applied = data.map(d => parseFloat((d["TI Applied"] || "0").replace(/[$,]/g, "")));
+      const invoiceIds = data.map(d => d["Invoice #"]);
+
+      Plotly.newPlot("chart2", [
+        {x: invoiceIds, y: offered, name: "Offered", type: "bar"},
+        {x: invoiceIds, y: applied, name: "TI Applied", type: "bar"}
+      ], {barmode: "group", title: "💵 Offered vs TI Applied", height: 400});
+
+      // 3. Carrier & Make Distribution
+      const carrierCounts = {};
+      const makeCounts = {};
+      data.forEach(d => {
+        carrierCounts[d.Carrier] = (carrierCounts[d.Carrier] || 0) + 1;
+        makeCounts[d.Make] = (makeCounts[d.Make] || 0) + 1;
+      });
+
+      Plotly.newPlot("chart3", [
+        {labels: Object.keys(carrierCounts), values: Object.values(carrierCounts), type: "pie", name: "Carrier", domain: {row: 0, column: 0}},
+        {labels: Object.keys(makeCounts), values: Object.values(makeCounts), type: "pie", name: "Make", domain: {row: 0, column: 1}}
+      ], {title: "📱 Carrier & Make Distribution", grid: {rows: 1, columns: 2}, height: 400});
+
+      // 4. Store Performance
+      const storeValues = {};
+      data.forEach(d => {
+        const val = parseFloat((d["TI Applied"] || "0").replace(/[$,]/g, "")) || 0;
+        storeValues[d["Store Name"]] = (storeValues[d["Store Name"]] || 0) + val;
+      });
+
+      Plotly.newPlot("chart4", [{
+        x: Object.values(storeValues),
+        y: Object.keys(storeValues),
+        type: "bar",
+        orientation: "h"
+      }], {title: "🏬 Store Performance (TI Applied Value)", height: 400});
+
+      // 5. Market Performance
+      const MarkValues = {};
+      data.forEach(d => {
+        const val = parseFloat((d["TI Applied"] || "0").replace(/[$,]/g, "")) || 0;
+        MarkValues[d["Market Name"]] = (MarkValues[d["Market Name"]] || 0) + val;
+      });
+
+      Plotly.newPlot("chart5", [{
+        x: Object.keys(MarkValues),
+        y: Object.values(MarkValues),
+        type: "bar"
+      }], {title: "🌍 Market Performance (TI Applied Value)", height: 400});
+    }
+
+    // 📌 Download buttons
+    document.getElementById("downloadPNG").addEventListener("click", () => {
+      html2canvas(document.getElementById("dashboard")).then(canvas => {
+        const link = document.createElement("a");
+        link.download = "tradeins_dashboard.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      });
+    });
+
+    document.getElementById("downloadPDF").addEventListener("click", () => {
+      html2canvas(document.getElementById("dashboard")).then(canvas => {
+        const imgData = canvas.toDataURL("image/png");
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF("l", "mm", "a4");
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const imgWidth = pageWidth;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        pdf.addImage(imgData, "PNG", 0, 10, imgWidth, imgHeight);
+        pdf.save("tradeins_dashboard.pdf");
+      });
+    });
+  </script>
+</body>
+</html>
