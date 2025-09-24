@@ -2,203 +2,269 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Trade-ins Performance Dashboard</title>
-  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <title>Trade-ins Market Dashboard</title>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #d6f5f7, #b3e5fc);
       margin: 0;
       padding: 30px;
-      background: linear-gradient(135deg, #d6f5f7, #b3e5fc);
       display: flex;
       flex-direction: column;
       align-items: center;
       min-height: 100vh;
     }
     h1 {
-      text-align: center;
       color: #003344;
+      text-align: center;
       font-size: 2.2rem;
-      margin-bottom: 40px;
+      margin-bottom: 30px;
       text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
     }
-    .dashboard-grid {
+    .cards-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-      gap: 25px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
       width: 100%;
       max-width: 1600px;
+      margin-bottom: 40px;
     }
-    .chart {
-      padding: 15px;
-      border-radius: 20px;
-      background: rgba(255, 255, 255, 0.18);
+    .card {
+      background: rgba(255, 255, 255, 0.2);
       backdrop-filter: blur(15px);
       -webkit-backdrop-filter: blur(15px);
-      border: 1px solid rgba(255, 255, 255, 0.4);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
-      height: 450px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
-    .chart:hover {
+    .card:hover {
       transform: translateY(-5px);
-      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 14px 40px rgba(0,0,0,0.2);
+    }
+    .card h2 {
+      margin: 0;
+      font-size: 1.2rem;
+      color: #003344;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .card p {
+      margin: 0;
+      font-size: 2rem;
+      font-weight: bold;
+      color: #004d66;
+      text-align: center;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      max-width: 1200px;
+      background: rgba(255,255,255,0.2);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    }
+    th, td {
+      padding: 12px 15px;
+      text-align: center;
+      color: #003344;
+    }
+    th {
+      background: rgba(0,77,102,0.15);
+    }
+    tr:nth-child(even) {
+      background: rgba(255,255,255,0.1);
+    }
+    tr:hover {
+      background: rgba(0,77,102,0.1);
     }
     .download-buttons {
       display: flex;
-      justify-content: center;
       gap: 15px;
-      margin-bottom: 30px;
+      margin: 20px 0;
     }
-    button {
+    .download-buttons button {
       padding: 12px 20px;
       border: none;
       border-radius: 14px;
-      background: rgba(255, 255, 255, 0.25);
+      background: rgba(255,255,255,0.25);
       backdrop-filter: blur(12px);
-      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 6px 24px rgba(0,0,0,0.15);
       color: #003344;
       cursor: pointer;
       font-weight: 600;
       transition: all 0.3s ease;
-      margin: 10px;
     }
-    button:hover {
-      background: rgba(255, 255, 255, 0.4);
+    .download-buttons button:hover {
+      background: rgba(255,255,255,0.4);
       transform: translateY(-2px);
     }
   </style>
 </head>
 <body>
-  <h1>📊 Trade-ins Performance Dashboard</h1>
+  <h1>📊 Trade-ins Market Dashboard</h1>
 
-  <!-- Download buttons -->
+  <!-- Download Buttons -->
   <div class="download-buttons">
     <button id="downloadPNG">⬇️ Download as PNG</button>
     <button id="downloadPDF">⬇️ Download as PDF</button>
   </div>
 
-  <!-- Chart Containers in Grid -->
-  <div id="dashboard" class="dashboard-grid">
-    <div id="chart1" class="chart"></div>
-    <div id="chart2" class="chart"></div>
-    <div id="chart3" class="chart"></div>
-    <div id="chart4" class="chart"></div>
-    <div id="chart5" class="chart"></div>
-  </div>
+  <!-- Summary Cards -->
+  <div class="cards-grid" id="summary-cards"></div>
 
+  <!-- Market Performance Table -->
+  <table id="market-table">
+    <thead>
+      <tr>
+        <th>Market</th>
+        <th>Total Trade-ins</th>
+        <th>TI Applied (Sum)</th>
+        <th>Offered (Sum)</th>
+        <th>Avg TI Applied</th>
+        <th>Avg Offered</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
-    // Google Sheet CSV export link (from your publish URL)
-    const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSfrcSWw9-PyEe7nZs-BotPkvTPsln57Ba-2u6AFy8woMG0H21lObx0jMwCbbQYvw/pub?gid=838451932&single=true&output=csv";
+    const googleSheetCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSfrcSWw9-PyEe7nZs-BotPkvTPsln57Ba-2u6AFy8woMG0H21lObx0jMwCbbQYvw/pub?output=csv";
 
-    fetch(sheetUrl)
-      .then(response => response.text())
-      .then(csvText => {
-        const rows = csvText.split("\n").map(r => r.split(","));
-        const headers = rows[0];
-        const data = rows.slice(1).map(row => {
-          let obj = {};
-          headers.forEach((h, i) => obj[h.trim()] = row[i]);
-          return obj;
-        });
-        generateDashboard(data);
-      })
-      .catch(err => console.error("Error loading Google Sheet:", err));
-
-    function generateDashboard(data) {
-      // 1. Trade-in Volume Over Time
-      const dates = data.map(d => new Date(d["Invoice Date"]));
-      const countsByDate = {};
-      dates.forEach(date => {
-        if (!isNaN(date)) {
-          const day = date.toISOString().split("T")[0];
-          countsByDate[day] = (countsByDate[day] || 0) + 1;
-        }
-      });
-
-      Plotly.newPlot("chart1", [{
-        x: Object.keys(countsByDate),
-        y: Object.values(countsByDate),
-        type: "scatter",
-        mode: "markers+lines",
-        name: "Trade-ins",
-        line: {shape: "spline", width: 3}
-      }], {title: "📈 Trade-in Volume Over Time", height: 400});
-
-      // 2. Offered vs TI Applied
-      const offered = data.map(d => parseFloat((d["Offered"] || "0").replace(/[$,]/g, "")));
-      const applied = data.map(d => parseFloat((d["TI Applied"] || "0").replace(/[$,]/g, "")));
-      const invoiceIds = data.map(d => d["Invoice #"]);
-
-      Plotly.newPlot("chart2", [
-        {x: invoiceIds, y: offered, name: "Offered", type: "bar"},
-        {x: invoiceIds, y: applied, name: "TI Applied", type: "bar"}
-      ], {barmode: "group", title: "💵 Offered vs TI Applied", height: 400});
-
-      // 3. Carrier & Make Distribution
-      const carrierCounts = {};
-      const makeCounts = {};
-      data.forEach(d => {
-        carrierCounts[d.Carrier] = (carrierCounts[d.Carrier] || 0) + 1;
-        makeCounts[d.Make] = (makeCounts[d.Make] || 0) + 1;
-      });
-
-      Plotly.newPlot("chart3", [
-        {labels: Object.keys(carrierCounts), values: Object.values(carrierCounts), type: "pie", name: "Carrier", domain: {row: 0, column: 0}},
-        {labels: Object.keys(makeCounts), values: Object.values(makeCounts), type: "pie", name: "Make", domain: {row: 0, column: 1}}
-      ], {title: "📱 Carrier & Make Distribution", grid: {rows: 1, columns: 2}, height: 400});
-
-      // 4. Store Performance
-      const storeValues = {};
-      data.forEach(d => {
-        const val = parseFloat((d["TI Applied"] || "0").replace(/[$,]/g, "")) || 0;
-        storeValues[d["Store Name"]] = (storeValues[d["Store Name"]] || 0) + val;
-      });
-
-      Plotly.newPlot("chart4", [{
-        x: Object.values(storeValues),
-        y: Object.keys(storeValues),
-        type: "bar",
-        orientation: "h"
-      }], {title: "🏬 Store Performance (TI Applied Value)", height: 400});
-
-      // 5. Market Performance
-      const MarkValues = {};
-      data.forEach(d => {
-        const val = parseFloat((d["TI Applied"] || "0").replace(/[$,]/g, "")) || 0;
-        MarkValues[d["Market Name"]] = (MarkValues[d["Market Name"]] || 0) + val;
-      });
-
-      Plotly.newPlot("chart5", [{
-        x: Object.keys(MarkValues),
-        y: Object.values(MarkValues),
-        type: "bar"
-      }], {title: "🌍 Market Performance (TI Applied Value)", height: 400});
+    async function fetchData() {
+      try {
+        const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(googleSheetCSV)}`);
+        const csvText = await response.text();
+        return csvToJson(csvText);
+      } catch (err) {
+        alert("Error loading Google Sheet: " + err);
+        return [];
+      }
     }
 
-    // 📌 Download buttons
+    function csvToJson(csv) {
+      const lines = csv.split("\n").filter(line => line.trim() !== "");
+      const headers = lines[0].split(",").map(h => h.trim());
+      return lines.slice(1).map(line => {
+        const values = line.split(",").map(v => v.trim());
+        const obj = {};
+        headers.forEach((h, i) => obj[h] = values[i]);
+        return obj;
+      });
+    }
+
+    function formatCurrency(val) {
+      return "$" + Number(val || 0).toLocaleString();
+    }
+
+    function createSummaryCards(data) {
+      const totalTradeins = data.length;
+      const totalTI = data.reduce((a,b) => a + parseFloat((b["TI Applied"]||0).replace(/[$,]/g,"")),0);
+      const totalOffered = data.reduce((a,b) => a + parseFloat((b["Offered"]||0).replace(/[$,]/g,"")),0);
+      const avgTI = totalTI / totalTradeins || 0;
+      const avgOffered = totalOffered / totalTradeins || 0;
+
+      // Carrier distribution
+      const carrierCounts = {};
+      data.forEach(d => carrierCounts[d.Carrier] = (carrierCounts[d.Carrier] || 0)+1);
+
+      // Make distribution
+      const makeCounts = {};
+      data.forEach(d => makeCounts[d.Make] = (makeCounts[d.Make] || 0)+1);
+
+      const cards = [
+        {title:"Total Trade-ins", value:totalTradeins},
+        {title:"Total TI Applied", value:formatCurrency(totalTI)},
+        {title:"Total Offered", value:formatCurrency(totalOffered)},
+        {title:"Avg TI Applied", value:formatCurrency(avgTI.toFixed(2))},
+        {title:"Avg Offered", value:formatCurrency(avgOffered.toFixed(2))},
+        {title:"Carrier Count", value:Object.entries(carrierCounts).map(([k,v])=>`${k}: ${v}`).join(", ")},
+        {title:"Make Count", value:Object.entries(makeCounts).map(([k,v])=>`${k}: ${v}`).join(", ")}
+      ];
+
+      const container = document.getElementById("summary-cards");
+      container.innerHTML = "";
+      cards.forEach(c => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `<h2>${c.title}</h2><p>${c.value}</p>`;
+        container.appendChild(card);
+      });
+    }
+
+    function createMarketTable(data) {
+      const marketData = {};
+      data.forEach(d => {
+        const market = d["Market Name"] || "Unknown";
+        const ti = parseFloat((d["TI Applied"]||0).replace(/[$,]/g,""));
+        const offered = parseFloat((d["Offered"]||0).replace(/[$,]/g,""));
+        if(!marketData[market]) marketData[market]={count:0, ti:0, offered:0};
+        marketData[market].count += 1;
+        marketData[market].ti += ti;
+        marketData[market].offered += offered;
+      });
+
+      // Sort markets by TI Applied descending
+      const sortedMarkets = Object.entries(marketData).sort((a,b)=>b[1].ti - a[1].ti);
+
+      const tbody = document.querySelector("#market-table tbody");
+      tbody.innerHTML = "";
+      sortedMarkets.forEach(([market, val])=>{
+        const avgTI = val.ti / val.count || 0;
+        const avgOff = val.offered / val.count || 0;
+        const row = `<tr>
+          <td>${market}</td>
+          <td>${val.count}</td>
+          <td>${formatCurrency(val.ti)}</td>
+          <td>${formatCurrency(val.offered)}</td>
+          <td>${formatCurrency(avgTI.toFixed(2))}</td>
+          <td>${formatCurrency(avgOff.toFixed(2))}</td>
+        </tr>`;
+        tbody.innerHTML += row;
+      });
+    }
+
+    async function initDashboard() {
+      const data = await fetchData();
+      createSummaryCards(data);
+      createMarketTable(data);
+    }
+
+    initDashboard();
+
+    // Download as PNG
     document.getElementById("downloadPNG").addEventListener("click", () => {
-      html2canvas(document.getElementById("dashboard")).then(canvas => {
+      html2canvas(document.body).then(canvas=>{
         const link = document.createElement("a");
-        link.download = "tradeins_dashboard.png";
-        link.href = canvas.toDataURL("image/png");
+        link.download="market_dashboard.png";
+        link.href=canvas.toDataURL("image/png");
         link.click();
       });
     });
 
+    // Download as PDF
     document.getElementById("downloadPDF").addEventListener("click", () => {
-      html2canvas(document.getElementById("dashboard")).then(canvas => {
+      html2canvas(document.body).then(canvas=>{
         const imgData = canvas.toDataURL("image/png");
         const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF("l", "mm", "a4");
+        const pdf = new jsPDF("p","mm","a4");
         const pageWidth = pdf.internal.pageSize.getWidth();
         const pageHeight = pdf.internal.pageSize.getHeight();
         const imgWidth = pageWidth;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        pdf.addImage(imgData, "PNG", 0, 10, imgWidth, imgHeight);
-        pdf.save("tradeins_dashboard.pdf");
+        const imgHeight = (canvas.height * imgWidth)/canvas.width;
+        pdf.addImage(imgData,"PNG",0,10,imgWidth,imgHeight);
+        pdf.save("market_dashboard.pdf");
       });
     });
   </script>
