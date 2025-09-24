@@ -8,12 +8,13 @@
 <style>
   body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #e0f7fa, #b3e5fc); margin:0; padding:20px; display:flex; flex-direction:column; align-items:center; }
   h1 { font-size:2rem; color:#003344; margin-bottom:20px; text-align:center; text-shadow:1px 1px 2px rgba(0,0,0,0.1);}
+  h2 { margin:20px 0 10px; color:#003344; }
   .cards-grid {display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:15px; width:100%; max-width:1200px; margin-bottom:30px;}
   .card {background: rgba(255,255,255,0.2); backdrop-filter: blur(12px); border-radius:15px; padding:15px; text-align:center; box-shadow:0 5px 15px rgba(0,0,0,0.1); transition: transform 0.3s, box-shadow 0.3s;}
   .card:hover {transform: translateY(-3px); box-shadow:0 10px 25px rgba(0,0,0,0.15);}
   .card h2 {margin:5px 0; font-size:1rem; color:#003344;}
   .card p {margin:0; font-size:1.4rem; font-weight:bold; color:#004d66;}
-  table {width:100%; max-width:1200px; border-collapse:collapse; background: rgba(255,255,255,0.2); backdrop-filter: blur(12px); border-radius:10px; overflow:hidden; box-shadow:0 5px 15px rgba(0,0,0,0.1); margin-bottom:30px;}
+  table {width:100%; border-collapse:collapse; background: rgba(255,255,255,0.2); backdrop-filter: blur(12px); border-radius:10px; overflow:hidden; box-shadow:0 5px 15px rgba(0,0,0,0.1); margin-bottom:30px;}
   th, td {padding:10px 12px; text-align:center; color:#003344;}
   th {background: rgba(0,77,102,0.15);}
   tr:nth-child(even) {background: rgba(255,255,255,0.1);}
@@ -25,6 +26,8 @@
   .download-buttons {display:flex; gap:10px; margin-bottom:20px;}
   .download-buttons button {padding:10px 15px; border:none; border-radius:12px; background:rgba(255,255,255,0.25); backdrop-filter:blur(10px); color:#003344; font-weight:600; cursor:pointer; transition:all 0.3s;}
   .download-buttons button:hover {background:rgba(255,255,255,0.4); transform:translateY(-2px);}
+  .drilldown-container {display:grid; grid-template-columns:1fr 1fr; gap:20px; width:100%; max-width:1200px;}
+  @media(max-width:900px){ .drilldown-container{grid-template-columns:1fr;} }
 </style>
 </head>
 <body>
@@ -47,15 +50,30 @@
 <tbody></tbody>
 </table>
 
-<h2>📋 Model-wise Performance (Click a Market Above)</h2>
-<table id="model-table">
-<thead>
-<tr>
-<th>Model</th><th>Total Trade-ins</th><th>TI Applied</th><th>Offered</th><th>Avg TI Applied</th><th>Avg Offered</th><th>Performance</th>
-</tr>
-</thead>
-<tbody></tbody>
-</table>
+<div class="drilldown-container" id="drilldown" style="display:none;">
+  <div>
+    <h2>🏬 Store-wise Performance</h2>
+    <table id="store-table">
+      <thead>
+        <tr>
+          <th>Store</th><th>Total Trade-ins</th><th>TI Applied</th><th>Offered</th><th>Avg TI Applied</th><th>Avg Offered</th><th>Performance</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <div>
+    <h2>📋 Model-wise Performance</h2>
+    <table id="model-table">
+      <thead>
+        <tr>
+          <th>Model</th><th>Total Trade-ins</th><th>TI Applied</th><th>Offered</th><th>Avg TI Applied</th><th>Avg Offered</th><th>Performance</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
 
 <script>
 const googleSheetCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSfrcSWw9-PyEe7nZs-BotPkvTPsln57Ba-2u6AFy8woMG0H21lObx0jMwCbbQYvw/pub?output=csv";
@@ -117,7 +135,34 @@ function createMarketTable(data){
     const row=document.createElement("tr"); row.className=perfClass;
     row.innerHTML=`<td class="market-cell" style="cursor:pointer">${market}</td><td>${val.count}</td><td>${formatCurrency(val.ti)}</td><td>${formatCurrency(val.offered)}</td><td>${formatCurrency(avgTI.toFixed(2))}</td><td>${formatCurrency(avgOff.toFixed(2))}</td><td><div class="bar-cell"><div class="bar" style="width:${barWidth}%"></div></div></td>`;
     tbody.appendChild(row);
-    row.querySelector(".market-cell").addEventListener("click", ()=>createModelTable(data, market));
+    row.querySelector(".market-cell").addEventListener("click", ()=>createDrilldown(data, market));
+  });
+}
+
+function createDrilldown(data, marketFilter){
+  document.getElementById("drilldown").style.display="grid";
+  createStoreTable(data, marketFilter);
+  createModelTable(data, marketFilter);
+}
+
+function createStoreTable(data, marketFilter){
+  let filtered = data.filter(d=>d["Market Name"]===marketFilter);
+  const storeData={};
+  filtered.forEach(d=>{
+    const store=d["Store Name"]||"Unknown"; const ti=parseFloat((d["TI Applied"]||0).replace(/[$,]/g,"")); const offered=parseFloat((d["Offered"]||0).replace(/[$,]/g,""));
+    if(!storeData[store]) storeData[store]={count:0, ti:0, offered:0};
+    storeData[store].count+=1; storeData[store].ti+=ti; storeData[store].offered+=offered;
+  });
+  const sortedStores=Object.entries(storeData).sort((a,b)=>b[1].ti-a[1].ti);
+  const tbody=document.querySelector("#store-table tbody"); tbody.innerHTML="";
+  const maxTI=Math.max(...sortedStores.map(([s,v])=>v.ti));
+  sortedStores.forEach(([store,val],idx)=>{
+    const avgTI=val.ti/val.count||0; const avgOff=val.offered/val.count||0;
+    let perfClass="low-performer"; if(idx<Math.ceil(sortedStores.length*0.2)) perfClass="top-performer"; else if(idx<Math.ceil(sortedStores.length*0.5)) perfClass="middle-performer";
+    const barWidth=(val.ti/maxTI)*100;
+    const row=document.createElement("tr"); row.className=perfClass;
+    row.innerHTML=`<td>${store}</td><td>${val.count}</td><td>${formatCurrency(val.ti)}</td><td>${formatCurrency(val.offered)}</td><td>${formatCurrency(avgTI.toFixed(2))}</td><td>${formatCurrency(avgOff.toFixed(2))}</td><td><div class="bar-cell"><div class="bar" style="width:${barWidth}%"></div></div></td>`;
+    tbody.appendChild(row);
   });
 }
 
