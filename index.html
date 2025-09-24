@@ -1,335 +1,229 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>📊 Trade-ins Interactive Dashboard</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-  body {
-    font-family: 'Segoe UI', sans-serif;
-    background: linear-gradient(135deg, #e0f7fa, #b3e5fc);
-    margin: 0;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  h1 {
-    font-size: 2rem;
-    color: #003344;
-    margin-bottom: 20px;
-    text-align: center;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
-  }
-  h2 {
-    margin-top: 30px;
-    margin-bottom: 10px;
-    color: #003344;
-  }
-  .cards-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px,1fr));
-    gap: 15px;
-    width: 100%;
-    max-width: 1200px;
-    margin-bottom: 30px;
-  }
-  .card {
-    background: rgba(255,255,255,0.2);
-    backdrop-filter: blur(12px);
-    border-radius: 15px;
-    padding: 15px;
-    text-align: center;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    transition: transform 0.3s, box-shadow 0.3s;
-  }
-  .card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-  }
-  .card h2 {
-    margin: 5px 0;
-    font-size: 1rem;
-    color: #003344;
-  }
-  .card p {
-    margin: 0;
-    font-size: 1.4rem;
-    font-weight: bold;
-    color: #004d66;
-  }
-  table {
-    width: 100%;
-    max-width: 1200px;
-    border-collapse: collapse;
-    background: rgba(255,255,255,0.2);
-    backdrop-filter: blur(12px);
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    margin-bottom: 30px;
-  }
-  th, td {
-    padding: 10px 12px;
-    text-align: center;
-    color: #003344;
-  }
-  th {
-    background: rgba(0,77,102,0.15);
-  }
-  tr:nth-child(even) {
-    background: rgba(255,255,255,0.1);
-  }
-  tr.top-performer { background: #d4edda; }
-  tr.middle-performer { background: #fff3cd; }
-  tr.low-performer { background: #f8d7da; }
-
-  .bar-cell {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    justify-content: center;
-  }
-  .bar {
-    height: 15px;
-    border-radius: 5px;
-    background: #0077b6;
-  }
-  .download-buttons {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-  .download-buttons button {
-    padding: 10px 15px;
-    border: none;
-    border-radius: 12px;
-    background: rgba(255,255,255,0.25);
-    backdrop-filter: blur(10px);
-    color: #003344;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s;
-  }
-  .download-buttons button:hover {
-    background: rgba(255,255,255,0.4);
-    transform: translateY(-2px);
-  }
-
-  /* Drilldown charts */
-  .chart-container {
-    display: flex;
-    gap: 20px;
-    justify-content: space-between;
-    margin-bottom: 30px;
-    flex-wrap: wrap;
-  }
-  .chart-box {
-    flex: 1 1 48%;
-    min-width: 320px;
-    background: rgba(255,255,255,0.2);
-    backdrop-filter: blur(12px);
-    border-radius: 12px;
-    padding: 15px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  }
-  .chart-box h3 {
-    text-align: center;
-    font-size: 1rem;
-    margin-bottom: 10px;
-    color: #003344;
-  }
-  canvas {
-    width: 100% !important;
-    height: 300px !important;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Trade-in Market Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f4f7fb;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #222;
+    }
+    .dashboard {
+      display: grid;
+      gap: 20px;
+    }
+    .cards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: center;
+    }
+    .card {
+      flex: 1;
+      min-width: 180px;
+      background: white;
+      border-radius: 12px;
+      padding: 15px;
+      text-align: center;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+      transition: transform .2s;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+    }
+    .card h2 {
+      font-size: 22px;
+      margin: 5px 0;
+      color: #007bff;
+    }
+    .card p {
+      font-size: 14px;
+      color: #666;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    }
+    th, td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+    th {
+      background: #007bff;
+      color: white;
+    }
+    tr:hover {
+      background: #f1f6ff;
+      cursor: pointer;
+    }
+    .details {
+      display: none;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .details.active {
+      display: grid;
+    }
+    .model-table td {
+      vertical-align: middle;
+    }
+    .spark-bar {
+      height: 8px;
+      background: #007bff;
+      border-radius: 4px;
+    }
+  </style>
 </head>
 <body>
-<h1>📊 Trade-ins Interactive Dashboard</h1>
+  <h1>📊 Trade-in Market Dashboard</h1>
 
-<div class="download-buttons">
-  <button id="downloadPNG">⬇️ Download as PNG</button>
-  <button id="downloadPDF">⬇️ Download as PDF</button>
-</div>
+  <div class="cards" id="summary-cards"></div>
 
-<div class="cards-grid" id="summary-cards"></div>
+  <h2>Market Performance</h2>
+  <table id="market-table">
+    <thead>
+      <tr>
+        <th>Market</th>
+        <th>Total Trades</th>
+        <th>Approved</th>
+        <th>Not Approved</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
-<h2>📊 Market Performance</h2>
-<table id="market-table">
-<thead>
-<tr>
-<th>Market</th><th>Total Trade-ins</th><th>TI Applied</th><th>Offered</th><th>Avg TI Applied</th><th>Avg Offered</th><th>Performance</th>
-</tr>
-</thead>
-<tbody></tbody>
-</table>
-
-<h2>📋 Market Drilldown (Click a Market Above)</h2>
-<div class="chart-container">
-  <div class="chart-box">
-    <h3>Model-wise Performance</h3>
-    <canvas id="modelChart"></canvas>
+  <div class="details" id="market-details">
+    <div>
+      <h2 id="market-title">Market Details</h2>
+      <div class="cards" id="market-summary"></div>
+    </div>
+    <div>
+      <h2>Model-wise Sales</h2>
+      <table class="model-table">
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>Sales</th>
+            <th>Chart</th>
+          </tr>
+        </thead>
+        <tbody id="model-table-body"></tbody>
+      </table>
+    </div>
   </div>
-  <div class="chart-box">
-    <h3>Store-wise Performance</h3>
-    <canvas id="storeChart"></canvas>
-  </div>
-</div>
 
-<script>
-const googleSheetCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSfrcSWw9-PyEe7nZs-BotPkvTPsln57Ba-2u6AFy8woMG0H21lObx0jMwCbbQYvw/pub?output=csv";
+  <script>
+    const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSfrcSWw9-PyEe7nZs-BotPkvTPsln57Ba-2u6AFy8woMG0H21lObx0jMwCbbQYvw/pub?gid=838451932&single=true&output=csv";
 
-let modelChartInstance, storeChartInstance;
+    async function fetchCSV(url) {
+      const res = await fetch(url);
+      return await res.text();
+    }
 
-async function fetchData() {
-  try {
-    const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(googleSheetCSV)}`);
-    const csvText = await response.text();
-    return csvToJson(csvText);
-  } catch(err) { alert("Error loading Google Sheet: "+err); return []; }
-}
+    function parseCSV(data) {
+      const rows = data.split("\n").map(r => r.split(","));
+      const headers = rows.shift();
+      return rows.map(r => {
+        const obj = {};
+        headers.forEach((h, i) => obj[h.trim()] = r[i] ? r[i].trim() : "");
+        return obj;
+      }).filter(r => r["Market Name"]);
+    }
 
-function csvToJson(csv){
-  const lines = csv.split("\n").filter(l=>l.trim()!=="");
-  const headers = lines[0].split(",").map(h=>h.trim());
-  return lines.slice(1).map(l=>{
-    const values=l.split(",").map(v=>v.trim());
-    const obj={};
-    headers.forEach((h,i)=>obj[h]=values[i]);
-    return obj;
-  });
-}
+    function renderDashboard(data) {
+      // overall summary
+      const totalTrades = data.length;
+      const approved = data.filter(r => r["Aprv / not Aprv"].toLowerCase() === "approved").length;
+      const notApproved = totalTrades - approved;
 
-function formatCurrency(val){ return "$"+Number(val||0).toLocaleString(); }
+      document.getElementById("summary-cards").innerHTML = `
+        <div class="card"><h2>${totalTrades}</h2><p>Total Trades</p></div>
+        <div class="card"><h2>${approved}</h2><p>Approved</p></div>
+        <div class="card"><h2>${notApproved}</h2><p>Not Approved</p></div>
+      `;
 
-function createSummaryCards(data){
-  const totalTradeins = data.length;
-  const totalTI = data.reduce((a,b)=>a+parseFloat((b["TI Applied"]||0).replace(/[$,]/g,"")),0);
-  const totalOffered = data.reduce((a,b)=>a+parseFloat((b["Offered"]||0).replace(/[$,]/g,"")),0);
-  const avgTI = totalTI/totalTradeins||0;
-  const avgOffered = totalOffered/totalTradeins||0;
-  const cards = [
-    {title:"Total Trade-ins", value:totalTradeins},
-    {title:"Total TI Applied", value:formatCurrency(totalTI)},
-    {title:"Total Offered", value:formatCurrency(totalOffered)},
-    {title:"Avg TI Applied", value:formatCurrency(avgTI.toFixed(2))},
-    {title:"Avg Offered", value:formatCurrency(avgOffered.toFixed(2))}
-  ];
-  const container = document.getElementById("summary-cards"); container.innerHTML="";
-  cards.forEach(c=>{
-    const card=document.createElement("div");
-    card.className="card";
-    card.innerHTML=`<h2>${c.title}</h2><p>${c.value}</p>`;
-    container.appendChild(card);
-  });
-}
+      // market summary
+      const markets = {};
+      data.forEach(r => {
+        const m = r["Market Name"];
+        if (!markets[m]) markets[m] = { total: 0, approved: 0, notApproved: 0 };
+        markets[m].total++;
+        if (r["Aprv / not Aprv"].toLowerCase() === "approved") markets[m].approved++;
+        else markets[m].notApproved++;
+      });
 
-function createMarketTable(data){
-  const marketData={};
-  data.forEach(d=>{
-    const market=d["Market Name"]||"Unknown";
-    const ti=parseFloat((d["TI Applied"]||0).replace(/[$,]/g,""));
-    const offered=parseFloat((d["Offered"]||0).replace(/[$,]/g,""));
-    if(!marketData[market]) marketData[market]={count:0, ti:0, offered:0};
-    marketData[market].count+=1; marketData[market].ti+=ti; marketData[market].offered+=offered;
-  });
-  const sortedMarkets=Object.entries(marketData).sort((a,b)=>b[1].ti - a[1].ti);
-  const tbody=document.querySelector("#market-table tbody"); tbody.innerHTML="";
-  const maxTI=Math.max(...sortedMarkets.map(([m,v])=>v.ti));
-  sortedMarkets.forEach(([market,val],idx)=>{
-    const avgTI=val.ti/val.count||0; const avgOff=val.offered/val.count||0;
-    let perfClass="low-performer"; if(idx<Math.ceil(sortedMarkets.length*0.2)) perfClass="top-performer"; else if(idx<Math.ceil(sortedMarkets.length*0.5)) perfClass="middle-performer";
-    const barWidth=(val.ti/maxTI)*100;
-    const row=document.createElement("tr"); row.className=perfClass;
-    row.innerHTML=`<td class="market-cell" style="cursor:pointer">${market}</td>
-                   <td>${val.count}</td>
-                   <td>${formatCurrency(val.ti)}</td>
-                   <td>${formatCurrency(val.offered)}</td>
-                   <td>${formatCurrency(avgTI.toFixed(2))}</td>
-                   <td>${formatCurrency(avgOff.toFixed(2))}</td>
-                   <td><div class="bar-cell"><div class="bar" style="width:${barWidth}%"></div></div></td>`;
-    tbody.appendChild(row);
-    row.querySelector(".market-cell").addEventListener("click", ()=>renderDrilldownCharts(data, market));
-  });
-}
+      const tbody = document.querySelector("#market-table tbody");
+      tbody.innerHTML = "";
+      Object.keys(markets).forEach(m => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${m}</td>
+          <td>${markets[m].total}</td>
+          <td>${markets[m].approved}</td>
+          <td>${markets[m].notApproved}</td>
+        `;
+        row.onclick = () => showMarketDetails(m, data);
+        tbody.appendChild(row);
+      });
+    }
 
-function renderDrilldownCharts(data, marketFilter) {
-  const filtered = data.filter(d => d["Market Name"] === marketFilter);
+    function showMarketDetails(market, data) {
+      document.getElementById("market-details").classList.add("active");
+      document.getElementById("market-title").innerText = `📍 ${market} Summary`;
 
-  // ---- Model Aggregation ----
-  const modelData = {};
-  filtered.forEach(d => {
-    const model = d["Model"] || "Unknown";
-    const ti = parseFloat((d["TI Applied"]||0).replace(/[$,]/g,""));
-    if (!modelData[model]) modelData[model] = 0;
-    modelData[model] += ti;
-  });
+      const marketData = data.filter(r => r["Market Name"] === market);
+      const total = marketData.length;
+      const approved = marketData.filter(r => r["Aprv / not Aprv"].toLowerCase() === "approved").length;
+      const notApproved = total - approved;
 
-  // ---- Store Aggregation ----
-  const storeData = {};
-  filtered.forEach(d => {
-    const store = d["Store Name"] || "Unknown";
-    const ti = parseFloat((d["TI Applied"]||0).replace(/[$,]/g,""));
-    if (!storeData[store]) storeData[store] = 0;
-    storeData[store] += ti;
-  });
+      document.getElementById("market-summary").innerHTML = `
+        <div class="card"><h2>${total}</h2><p>Total Trades</p></div>
+        <div class="card"><h2>${approved}</h2><p>Approved</p></div>
+        <div class="card"><h2>${notApproved}</h2><p>Not Approved</p></div>
+      `;
 
-  // Destroy old charts if exist
-  if (modelChartInstance) modelChartInstance.destroy();
-  if (storeChartInstance) storeChartInstance.destroy();
+      // model breakdown
+      const models = {};
+      marketData.forEach(r => {
+        const model = r["Model"];
+        if (!models[model]) models[model] = 0;
+        models[model]++;
+      });
 
-  // Render Model Chart
-  modelChartInstance = new Chart(document.getElementById("modelChart"), {
-    type: "bar",
-    data: {
-      labels: Object.keys(modelData),
-      datasets: [{ label: "TI Applied", data: Object.values(modelData), backgroundColor: "#0077b6" }]
-    },
-    options: { responsive: true, plugins: { legend: { display: false } } }
-  });
+      const modelBody = document.getElementById("model-table-body");
+      modelBody.innerHTML = "";
+      const maxSales = Math.max(...Object.values(models));
+      Object.keys(models).forEach(m => {
+        const percent = (models[m] / maxSales) * 100;
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${m}</td>
+          <td>${models[m]}</td>
+          <td><div class="spark-bar" style="width:${percent}%;"></div></td>
+        `;
+        modelBody.appendChild(row);
+      });
+    }
 
-  // Render Store Chart
-  storeChartInstance = new Chart(document.getElementById("storeChart"), {
-    type: "bar",
-    data: {
-      labels: Object.keys(storeData),
-      datasets: [{ label: "TI Applied", data: Object.values(storeData), backgroundColor: "#00b894" }]
-    },
-    options: { responsive: true, plugins: { legend: { display: false } } }
-  });
-}
-
-async function initDashboard(){
-  const data = await fetchData();
-  createSummaryCards(data);
-  createMarketTable(data);
-
-  document.getElementById("downloadPNG").addEventListener("click", ()=>{
-    html2canvas(document.body).then(canvas=>{
-      const link=document.createElement("a");
-      link.download="tradeins_dashboard.png";
-      link.href=canvas.toDataURL("image/png");
-      link.click();
+    fetchCSV(sheetUrl).then(parseCSV).then(renderDashboard).catch(err => {
+      console.error("Error loading sheet", err);
     });
-  });
-  document.getElementById("downloadPDF").addEventListener("click", ()=>{
-    html2canvas(document.body).then(canvas=>{
-      const imgData = canvas.toDataURL("image/png");
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF("p","mm","a4");
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const imgWidth = pageWidth-20;
-      const imgHeight = (canvas.height*imgWidth)/canvas.width;
-      pdf.addImage(imgData,"PNG",10,10,imgWidth,imgHeight);
-      pdf.save("tradeins_dashboard.pdf");
-    });
-  });
-}
-
-initDashboard();
-</script>
+  </script>
 </body>
 </html>
