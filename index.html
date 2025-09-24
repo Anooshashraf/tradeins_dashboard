@@ -21,8 +21,11 @@
   tr.top-performer {background:#d4edda;}
   tr.middle-performer {background:#fff3cd;}
   tr.low-performer {background:#f8d7da;}
-  .bar-cell {display:flex; align-items:center; gap:5px; justify-content:center;}
-  .bar {height:15px; border-radius:5px; background:#0077b6;}
+
+  /* Adjusted graph bar styling */
+  .bar-cell {display:flex; align-items:center; gap:5px; justify-content:flex-start; width:150px; margin:auto;}
+  .bar {height:15px; border-radius:5px; background:#0077b6; min-width:20px;}
+
   .download-buttons {display:flex; gap:10px; margin-bottom:20px;}
   .download-buttons button {padding:10px 15px; border:none; border-radius:12px; background:rgba(255,255,255,0.25); backdrop-filter:blur(10px); color:#003344; font-weight:600; cursor:pointer; transition:all 0.3s;}
   .download-buttons button:hover {background:rgba(255,255,255,0.4); transform:translateY(-2px);}
