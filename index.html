@@ -129,11 +129,11 @@ function createSummaryCards(data){
     container.appendChild(card);
   });
 }
-
+//||"Unknown"
 function createMarketTable(data){
   const marketData={};
   data.forEach(d=>{
-    const market=d["Market Name"]||"Unknown";
+    const market=d["Market Name"];
     const ti=parseNumber(d["TI Applied"]);
     const offered=parseNumber(d["Offered"]);
     if(!marketData[market]) marketData[market]={count:0, ti:0, offered:0};
@@ -177,7 +177,7 @@ function createStoreTable(data, marketFilter){
   const filtered = data.filter(d=>d["Market Name"]===marketFilter);
   const storeData={};
   filtered.forEach(d=>{
-    const store=d["Store Name"]||"Unknown";
+    const store=d["Store Name"];
     const ti=parseNumber(d["TI Applied"]);
     const offered=parseNumber(d["Offered"]);
     if(!storeData[store]) storeData[store]={count:0, ti:0, offered:0};
@@ -213,7 +213,7 @@ function createModelTable(data, marketFilter){
   const filtered = data.filter(d=>d["Market Name"]===marketFilter);
   const modelData={};
   filtered.forEach(d=>{
-    const model=d["Model"]||"Unknown";
+    const model=d["Model"];
     const ti=parseNumber(d["TI Applied"]);
     const offered=parseNumber(d["Offered"]);
     if(!modelData[model]) modelData[model]={count:0, ti:0, offered:0};
