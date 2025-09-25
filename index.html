@@ -44,7 +44,7 @@
 <table id="market-table" aria-live="polite">
 <thead>
 <tr>
-<th>Market</th><th>Total Trade-ins</th><th>TI Applied</th><th>Offered</th><th>Avg TI Applied</th><th>Avg Offered</th><th>Performance</th>
+<th>Market</th><th>Total Trade-ins</th><th>Approved Count</th><th>Approved Cost</th><th>Not Approved Count</th><th>Not Approved Cost</th><th>Performance</th>
 </tr>
 </thead>
 <tbody></tbody>
@@ -56,7 +56,7 @@
     <table id="store-table">
       <thead>
         <tr>
-          <th>Store</th><th>Total Trade-ins</th><th>TI Applied</th><th>Offered</th><th>Avg TI Applied</th><th>Avg Offered</th><th>Performance</th>
+          <th>Store</th><th>Total Trade-ins</th><th>Approved Count</th><th>Approved Cost</th><th>Not Approved Count</th><th>Not Approved Cost</th><th>Performance</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -67,7 +67,7 @@
     <table id="model-table">
       <thead>
         <tr>
-          <th>Model</th><th>Total Trade-ins</th><th>TI Applied</th><th>Offered</th><th>Avg TI Applied</th><th>Avg Offered</th><th>Performance</th>
+          <th>Model</th><th>Total Trade-ins</th><th>Approved Count</th><th>Approved Cost</th><th>Not Approved Count</th><th>Not Approved Cost</th><th>Performance</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -94,12 +94,14 @@ async function fetchData() {
 function csvToJson(csv){
   const lines = csv.split("\n").filter(l=>l.trim()!=="");
   const headers = lines[0].split(",").map(h=>h.trim());
-  return lines.slice(1).map(l=>{
-    const values = l.split(",").map(v=>v.trim());
-    const obj = {};
-    headers.forEach((h,i)=> obj[h] = values[i] || "");
-    return obj;
-  });
+  return lines.slice(1)
+    .map(l=>{
+      const values = l.split(",").map(v=>v.trim());
+      const obj = {};
+      headers.forEach((h,i)=> obj[h] = values[i] || "");
+      return obj;
+    })
+    .filter(row => row["Market Name"]); // remove empty market rows
 }
 
 function formatCurrency(val){ return "$"+Number(val||0).toLocaleString(); }
@@ -109,15 +111,11 @@ function createSummaryCards(data){
   const totalTradeins = data.length;
   const totalTI = data.reduce((a,b)=>a+parseNumber(b["TI Applied"]),0);
   const totalOffered = data.reduce((a,b)=>a+parseNumber(b["Offered"]),0);
-  const avgTI = totalTradeins ? (totalTI/totalTradeins) : 0;
-  const avgOffered = totalTradeins ? (totalOffered/totalTradeins) : 0;
 
   const cards = [
     {title:"Total Trade-ins", value:totalTradeins},
     {title:"Total TI Applied", value:formatCurrency(totalTI)},
-    {title:"Total Offered", value:formatCurrency(totalOffered)},
-    {title:"Avg TI Applied", value:formatCurrency(avgTI.toFixed(2))},
-    {title:"Avg Offered", value:formatCurrency(avgOffered.toFixed(2))}
+    {title:"Total Offered", value:formatCurrency(totalOffered)}
   ];
 
   const container = document.getElementById("summary-cards");
@@ -129,38 +127,43 @@ function createSummaryCards(data){
     container.appendChild(card);
   });
 }
-//||"Unknown"
+
 function createMarketTable(data){
   const marketData={};
   data.forEach(d=>{
     const market=d["Market Name"];
     const ti=parseNumber(d["TI Applied"]);
-    const offered=parseNumber(d["Offered"]);
-    if(!marketData[market]) marketData[market]={count:0, ti:0, offered:0};
+    const status=(d["Status"]||"").toLowerCase();
+
+    if(!marketData[market]) marketData[market]={count:0, approvedCount:0, approvedCost:0, notApprovedCount:0, notApprovedCost:0};
     marketData[market].count+=1;
-    marketData[market].ti+=ti;
-    marketData[market].offered+=offered;
+
+    if(status==="approved"){
+      marketData[market].approvedCount+=1;
+      marketData[market].approvedCost+=ti;
+    } else {
+      marketData[market].notApprovedCount+=1;
+      marketData[market].notApprovedCost+=ti;
+    }
   });
 
-  const sortedMarkets=Object.entries(marketData).sort((a,b)=>b[1].ti - a[1].ti);
+  const sortedMarkets=Object.entries(marketData).sort((a,b)=>b[1].approvedCost - a[1].approvedCost);
   const tbody=document.querySelector("#market-table tbody"); tbody.innerHTML="";
-  const maxTI = sortedMarkets.length ? Math.max(...sortedMarkets.map(([m,v])=>v.ti)) : 1;
+  const maxTI = sortedMarkets.length ? Math.max(...sortedMarkets.map(([m,v])=>v.approvedCost)) : 1;
 
   sortedMarkets.forEach(([market,val],idx)=>{
-    const avgTI=val.count ? val.ti/val.count : 0;
-    const avgOff=val.count ? val.offered/val.count : 0;
     let perfClass="low-performer";
     if(idx<Math.ceil(sortedMarkets.length*0.2)) perfClass="top-performer";
     else if(idx<Math.ceil(sortedMarkets.length*0.5)) perfClass="middle-performer";
-    const barWidth=(val.ti/maxTI)*100;
+    const barWidth=(val.approvedCost/maxTI)*100;
     const row=document.createElement("tr");
     row.className=perfClass;
     row.innerHTML=`<td class="market-cell" style="cursor:pointer">${market}</td>
                      <td>${val.count}</td>
-                     <td>${formatCurrency(val.ti)}</td>
-                     <td>${formatCurrency(val.offered)}</td>
-                     <td>${formatCurrency(avgTI.toFixed(2))}</td>
-                     <td>${formatCurrency(avgOff.toFixed(2))}</td>
+                     <td>${val.approvedCount}</td>
+                     <td>${formatCurrency(val.approvedCost)}</td>
+                     <td>${val.notApprovedCount}</td>
+                     <td>${formatCurrency(val.notApprovedCost)}</td>
                      <td><div class="bar-cell"><div class="bar" style="width:${barWidth}%"></div></div></td>`;
     tbody.appendChild(row);
     row.querySelector(".market-cell").addEventListener("click",()=>createDrilldown(data,market));
@@ -179,31 +182,35 @@ function createStoreTable(data, marketFilter){
   filtered.forEach(d=>{
     const store=d["Store Name"];
     const ti=parseNumber(d["TI Applied"]);
-    const offered=parseNumber(d["Offered"]);
-    if(!storeData[store]) storeData[store]={count:0, ti:0, offered:0};
+    const status=(d["Status"]||"").toLowerCase();
+    if(!storeData[store]) storeData[store]={count:0, approvedCount:0, approvedCost:0, notApprovedCount:0, notApprovedCost:0};
     storeData[store].count+=1;
-    storeData[store].ti+=ti;
-    storeData[store].offered+=offered;
+    if(status==="approved"){
+      storeData[store].approvedCount+=1;
+      storeData[store].approvedCost+=ti;
+    } else {
+      storeData[store].notApprovedCount+=1;
+      storeData[store].notApprovedCost+=ti;
+    }
   });
-  const sortedStores=Object.entries(storeData).sort((a,b)=>b[1].ti - a[1].ti);
+
+  const sortedStores=Object.entries(storeData).sort((a,b)=>b[1].approvedCost - a[1].approvedCost);
   const tbody=document.querySelector("#store-table tbody"); tbody.innerHTML="";
-  const maxTI=sortedStores.length ? Math.max(...sortedStores.map(([s,v])=>v.ti)) : 1;
+  const maxTI=sortedStores.length ? Math.max(...sortedStores.map(([s,v])=>v.approvedCost)) : 1;
 
   sortedStores.forEach(([store,val],idx)=>{
-    const avgTI=val.count ? val.ti/val.count : 0;
-    const avgOff=val.count ? val.offered/val.count : 0;
     let perfClass="low-performer";
     if(idx<Math.ceil(sortedStores.length*0.2)) perfClass="top-performer";
     else if(idx<Math.ceil(sortedStores.length*0.5)) perfClass="middle-performer";
-    const barWidth=(val.ti/maxTI)*100;
+    const barWidth=(val.approvedCost/maxTI)*100;
     const row=document.createElement("tr");
     row.className=perfClass;
     row.innerHTML=`<td>${store}</td>
                    <td>${val.count}</td>
-                   <td>${formatCurrency(val.ti)}</td>
-                   <td>${formatCurrency(val.offered)}</td>
-                   <td>${formatCurrency(avgTI.toFixed(2))}</td>
-                   <td>${formatCurrency(avgOff.toFixed(2))}</td>
+                   <td>${val.approvedCount}</td>
+                   <td>${formatCurrency(val.approvedCost)}</td>
+                   <td>${val.notApprovedCount}</td>
+                   <td>${formatCurrency(val.notApprovedCost)}</td>
                    <td><div class="bar-cell"><div class="bar" style="width:${barWidth}%"></div></div></td>`;
     tbody.appendChild(row);
   });
@@ -215,31 +222,35 @@ function createModelTable(data, marketFilter){
   filtered.forEach(d=>{
     const model=d["Model"];
     const ti=parseNumber(d["TI Applied"]);
-    const offered=parseNumber(d["Offered"]);
-    if(!modelData[model]) modelData[model]={count:0, ti:0, offered:0};
+    const status=(d["Status"]||"").toLowerCase();
+    if(!modelData[model]) modelData[model]={count:0, approvedCount:0, approvedCost:0, notApprovedCount:0, notApprovedCost:0};
     modelData[model].count+=1;
-    modelData[model].ti+=ti;
-    modelData[model].offered+=offered;
+    if(status==="approved"){
+      modelData[model].approvedCount+=1;
+      modelData[model].approvedCost+=ti;
+    } else {
+      modelData[model].notApprovedCount+=1;
+      modelData[model].notApprovedCost+=ti;
+    }
   });
-  const sortedModels=Object.entries(modelData).sort((a,b)=>b[1].ti - a[1].ti);
+
+  const sortedModels=Object.entries(modelData).sort((a,b)=>b[1].approvedCost - a[1].approvedCost);
   const tbody=document.querySelector("#model-table tbody"); tbody.innerHTML="";
-  const maxTI=sortedModels.length ? Math.max(...sortedModels.map(([m,v])=>v.ti)) : 1;
+  const maxTI=sortedModels.length ? Math.max(...sortedModels.map(([m,v])=>v.approvedCost)) : 1;
 
   sortedModels.forEach(([model,val],idx)=>{
-    const avgTI=val.count ? val.ti/val.count : 0;
-    const avgOff=val.count ? val.offered/val.count : 0;
     let perfClass="low-performer";
     if(idx<Math.ceil(sortedModels.length*0.2)) perfClass="top-performer";
     else if(idx<Math.ceil(sortedModels.length*0.5)) perfClass="middle-performer";
-    const barWidth=(val.ti/maxTI)*100;
+    const barWidth=(val.approvedCost/maxTI)*100;
     const row=document.createElement("tr");
     row.className=perfClass;
     row.innerHTML=`<td>${model}</td>
                    <td>${val.count}</td>
-                   <td>${formatCurrency(val.ti)}</td>
-                   <td>${formatCurrency(val.offered)}</td>
-                   <td>${formatCurrency(avgTI.toFixed(2))}</td>
-                   <td>${formatCurrency(avgOff.toFixed(2))}</td>
+                   <td>${val.approvedCount}</td>
+                   <td>${formatCurrency(val.approvedCost)}</td>
+                   <td>${val.notApprovedCount}</td>
+                   <td>${formatCurrency(val.notApprovedCost)}</td>
                    <td><div class="bar-cell"><div class="bar" style="width:${barWidth}%"></div></div></td>`;
     tbody.appendChild(row);
   });
