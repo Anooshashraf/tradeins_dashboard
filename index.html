@@ -24,7 +24,7 @@
 
   /* Adjusted graph bar styling */
   .bar-cell {display:flex; align-items:center; gap:5px; justify-content:flex-start; width:150px; margin:auto;}
-  .bar {height:15px; border-radius:5px; background:#0077b6; min-width:20px;}
+  .bar {height:10px; border-radius:5px; background:#0077b6; min-width:20px; max-width:140px;}
 
   .download-buttons {display:flex; gap:10px; margin-bottom:20px;}
   .download-buttons button {padding:10px 15px; border:none; border-radius:12px; background:rgba(255,255,255,0.25); backdrop-filter:blur(10px); color:#003344; font-weight:600; cursor:pointer; transition:all 0.3s;}
@@ -44,7 +44,7 @@
 <div class="cards-grid" id="summary-cards"></div>
 
 <h2>📊 Market Performance</h2>
-<table id="market-table">
+<table id="market-table" aria-live="polite">
 <thead>
 <tr>
 <th>Market</th><th>Total Trade-ins</th><th>TI Applied</th><th>Offered</th><th>Avg TI Applied</th><th>Avg Offered</th><th>Performance</th>
@@ -79,41 +79,68 @@
 </div>
 
 <script>
-const googleSheetCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSfrcSWw9-PyEe7nZs-BotPkvTPsln57Ba-2u6AFy8woMG0H21lObx0jMwCbbQYvw/pub?gid=0&single=true&output=csv";
+/*
+  Fixed dashboard:
+  - Robust number parsing (parseNumber)
+  - No .replace on numeric values
+  - Uses CSV export link with gid (set to 838451932)
+  - Minimal changes to original logic/layout
+*/
 
+// Use the CSV export for the sheet tab (replace gid if needed)
+const googleSheetCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSfrcSWw9-PyEe7nZs-BotPkvTPsln57Ba-2u6AFy8woMG0H21lObx0jMwCbbQYvw/pub?gid=838451932&single=true&output=csv";
+
+// fetch via a public CORS proxy (AllOrigins). If you host the file on GitHub Pages, you may be able to fetch directly.
 async function fetchData() {
   try {
     const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(googleSheetCSV)}`);
+    if (!response.ok) throw new Error("Network response was not ok: " + response.status);
     const csvText = await response.text();
     return csvToJson(csvText);
-  } catch(err) { alert("Error loading Google Sheet: "+err); return []; }
+  } catch(err) {
+    alert("Error loading Google Sheet: " + err.message);
+    console.error(err);
+    return [];
+  }
 }
 
+// NOTE: This is a simple CSV parser that assumes commas are separators and fields don't contain unescaped commas.
+// If your sheet contains commas inside cells, consider publishing as TSV or using a proper CSV parser.
 function csvToJson(csv){
   const lines = csv.split("\n").filter(l=>l.trim()!=="");
   const headers = lines[0].split(",").map(h=>h.trim());
   return lines.slice(1).map(l=>{
-    const values=l.split(",").map(v=>v.trim());
-    const obj={};
-    headers.forEach((h,i)=>obj[h]=values[i]);
+    const values = l.split(",").map(v=>v.trim());
+    const obj = {};
+    headers.forEach((h,i)=> obj[h] = (typeof values[i] === "undefined") ? "" : values[i]);
     return obj;
   });
 }
 
-function formatCurrency(val){ return "$"+Number(val||0).toLocaleString(); }
+function formatCurrency(val) {
+  // format as currency with commas and $; expect val is number or numeric-string
+  const n = Number(val || 0);
+  if (Number.isNaN(n)) return "$0";
+  return "$" + n.toLocaleString();
+}
+
+// robust parser: accepts numbers, strings with $ , etc, or empty
+function parseNumber(v){
+  if (v === null || typeof v === "undefined") return 0;
+  // if already a number
+  if (typeof v === "number" && isFinite(v)) return v;
+  // convert to string and strip everything except digits and dot and minus
+  const s = String(v).replace(/[^0-9.\-]/g, "");
+  const n = parseFloat(s);
+  return Number.isFinite(n) ? n : 0;
+}
 
 function createSummaryCards(data){
   const totalTradeins = data.length;
-  const totalTI = data.reduce(
-    (a,b)=>a+parseFloat((b["TI Applied"] || "0").toString().replace(/[^0-9.]/g, "")),
-    0
-  );
-  const totalOffered = data.reduce(
-    (a,b)=>a+parseFloat((b["Offered"] || "0").toString().replace(/[^0-9.]/g, "")),
-    0
-  );
-  const avgTI = totalTI/totalTradeins||0;
-  const avgOffered = totalOffered/totalTradeins||0;
+  const totalTI = data.reduce((a,b)=> a + parseNumber(b["TI Applied"]), 0);
+  const totalOffered = data.reduce((a,b)=> a + parseNumber(b["Offered"]), 0);
+  const avgTI = totalTradeins ? (totalTI / totalTradeins) : 0;
+  const avgOffered = totalTradeins ? (totalOffered / totalTradeins) : 0;
 
   const cards = [
     {title:"Total Trade-ins", value:totalTradeins},
@@ -122,86 +149,145 @@ function createSummaryCards(data){
     {title:"Avg TI Applied", value:formatCurrency(avgTI.toFixed(2))},
     {title:"Avg Offered", value:formatCurrency(avgOffered.toFixed(2))}
   ];
+
   const container = document.getElementById("summary-cards");
-  container.innerHTML="";
+  container.innerHTML = "";
   cards.forEach(c=>{
-    const card=document.createElement("div");
-    card.className="card";
-    card.innerHTML=`<h2>${c.title}</h2><p>${c.value}</p>`;
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `<h2>${c.title}</h2><p>${c.value}</p>`;
     container.appendChild(card);
   });
 }
 
-
 function createMarketTable(data){
-  const marketData={};
+  const marketData = {};
   data.forEach(d=>{
-    const market=d["Market Name"]||"Unknown";
-    const ti=parseFloat((d["TI Applied"]||0).toString().replace(/[$,]/g,""));
-    const offered=parseFloat((d["Offered"]||0).toString().replace(/[$,]/g,""));
-    if(!marketData[market]) marketData[market]={count:0, ti:0, offered:0};
-    marketData[market].count+=1; marketData[market].ti+=ti; marketData[market].offered+=offered;
+    const market = d["Market Name"] || "Unknown";
+    const ti = parseNumber(d["TI Applied"]);
+    const offered = parseNumber(d["Offered"]);
+    if (!marketData[market]) marketData[market] = {count:0, ti:0, offered:0};
+    marketData[market].count += 1;
+    marketData[market].ti += ti;
+    marketData[market].offered += offered;
   });
-  const sortedMarkets=Object.entries(marketData).sort((a,b)=>b[1].ti - a[1].ti);
-  const tbody=document.querySelector("#market-table tbody"); tbody.innerHTML="";
-  const maxTI=Math.max(...sortedMarkets.map(([m,v])=>v.ti));
-  sortedMarkets.forEach(([market,val],idx)=>{
-    const avgTI=val.ti/val.count||0; const avgOff=val.offered/val.count||0;
-    let perfClass="low-performer"; if(idx<Math.ceil(sortedMarkets.length*0.2)) perfClass="top-performer"; else if(idx<Math.ceil(sortedMarkets.length*0.5)) perfClass="middle-performer";
-    const barWidth=(val.ti/maxTI)*100;
-    const row=document.createElement("tr"); row.className=perfClass;
-    row.innerHTML=`<td class="market-cell" style="cursor:pointer">${market}</td><td>${val.count}</td><td>${formatCurrency(val.ti)}</td><td>${formatCurrency(val.offered)}</td><td>${formatCurrency(avgTI.toFixed(2))}</td><td>${formatCurrency(avgOff.toFixed(2))}</td><td><div class="bar-cell"><div class="bar" style="width:${barWidth}%"></div></div></td>`;
+
+  const sortedMarkets = Object.entries(marketData).sort((a,b)=> b[1].ti - a[1].ti);
+  const tbody = document.querySelector("#market-table tbody");
+  tbody.innerHTML = "";
+
+  // handle empty case
+  const maxTI = sortedMarkets.length ? Math.max(...sortedMarkets.map(([m,v])=>v.ti)) : 0 || 1;
+
+  sortedMarkets.forEach(([market,val], idx)=>{
+    const avgTI = val.count ? (val.ti / val.count) : 0;
+    const avgOff = val.count ? (val.offered / val.count) : 0;
+    let perfClass = "low-performer";
+    if (idx < Math.ceil(sortedMarkets.length * 0.2)) perfClass = "top-performer";
+    else if (idx < Math.ceil(sortedMarkets.length * 0.5)) perfClass = "middle-performer";
+    const barWidth = maxTI ? (val.ti / maxTI) * 100 : 0;
+    const row = document.createElement("tr");
+    row.className = perfClass;
+    row.innerHTML = `<td class="market-cell" style="cursor:pointer">${escapeHtml(market)}</td>
+                     <td>${val.count}</td>
+                     <td>${formatCurrency(val.ti)}</td>
+                     <td>${formatCurrency(val.offered)}</td>
+                     <td>${formatCurrency(avgTI.toFixed(2))}</td>
+                     <td>${formatCurrency(avgOff.toFixed(2))}</td>
+                     <td><div class="bar-cell"><div class="bar" style="width:${barWidth}%;"></div></div></td>`;
     tbody.appendChild(row);
     row.querySelector(".market-cell").addEventListener("click", ()=>createDrilldown(data, market));
   });
 }
 
 function createDrilldown(data, marketFilter){
-  document.getElementById("drilldown").style.display="grid";
+  document.getElementById("drilldown").style.display = "grid";
   createStoreTable(data, marketFilter);
   createModelTable(data, marketFilter);
 }
 
 function createStoreTable(data, marketFilter){
-  let filtered = data.filter(d=>d["Market Name"]===marketFilter);
-  const storeData={};
+  const filtered = data.filter(d => (d["Market Name"] || "") === marketFilter);
+  const storeData = {};
   filtered.forEach(d=>{
-    const store=d["Store Name"]||"Unknown"; const ti=parseFloat((d["TI Applied"]||0).toString().replace(/[$,]/g,"")); const offered=parseFloat((d["Offered"]||0).toString().replace(/[$,]/g,""));
-    if(!storeData[store]) storeData[store]={count:0, ti:0, offered:0};
-    storeData[store].count+=1; storeData[store].ti+=ti; storeData[store].offered+=offered;
+    const store = d["Store Name"] || "Unknown";
+    const ti = parseNumber(d["TI Applied"]);
+    const offered = parseNumber(d["Offered"]);
+    if (!storeData[store]) storeData[store] = {count:0, ti:0, offered:0};
+    storeData[store].count += 1;
+    storeData[store].ti += ti;
+    storeData[store].offered += offered;
   });
-  const sortedStores=Object.entries(storeData).sort((a,b)=>b[1].ti-a[1].ti);
-  const tbody=document.querySelector("#store-table tbody"); tbody.innerHTML="";
-  const maxTI=Math.max(...sortedStores.map(([s,v])=>v.ti));
-  sortedStores.forEach(([store,val],idx)=>{
-    const avgTI=val.ti/val.count||0; const avgOff=val.offered/val.count||0;
-    let perfClass="low-performer"; if(idx<Math.ceil(sortedStores.length*0.2)) perfClass="top-performer"; else if(idx<Math.ceil(sortedStores.length*0.5)) perfClass="middle-performer";
-    const barWidth=(val.ti/maxTI)*100;
-    const row=document.createElement("tr"); row.className=perfClass;
-    row.innerHTML=`<td>${store}</td><td>${val.count}</td><td>${formatCurrency(val.ti)}</td><td>${formatCurrency(val.offered)}</td><td>${formatCurrency(avgTI.toFixed(2))}</td><td>${formatCurrency(avgOff.toFixed(2))}</td><td><div class="bar-cell"><div class="bar" style="width:${barWidth}%"></div></div></td>`;
+
+  const sortedStores = Object.entries(storeData).sort((a,b)=> b[1].ti - a[1].ti);
+  const tbody = document.querySelector("#store-table tbody");
+  tbody.innerHTML = "";
+  const maxTI = sortedStores.length ? Math.max(...sortedStores.map(([s,v])=>v.ti)) : 0 || 1;
+
+  sortedStores.forEach(([store,val], idx)=>{
+    const avgTI = val.count ? (val.ti/val.count) : 0;
+    const avgOff = val.count ? (val.offered/val.count) : 0;
+    let perfClass = "low-performer";
+    if (idx < Math.ceil(sortedStores.length * 0.2)) perfClass = "top-performer";
+    else if (idx < Math.ceil(sortedStores.length * 0.5)) perfClass = "middle-performer";
+    const barWidth = maxTI ? (val.ti / maxTI) * 100 : 0;
+    const row = document.createElement("tr");
+    row.className = perfClass;
+    row.innerHTML = `<td>${escapeHtml(store)}</td>
+                     <td>${val.count}</td>
+                     <td>${formatCurrency(val.ti)}</td>
+                     <td>${formatCurrency(val.offered)}</td>
+                     <td>${formatCurrency(avgTI.toFixed(2))}</td>
+                     <td>${formatCurrency(avgOff.toFixed(2))}</td>
+                     <td><div class="bar-cell"><div class="bar" style="width:${barWidth}%;"></div></div></td>`;
     tbody.appendChild(row);
   });
 }
 
 function createModelTable(data, marketFilter){
-  let filtered = data.filter(d=>d["Market Name"]===marketFilter);
-  const modelData={};
+  const filtered = data.filter(d => (d["Market Name"] || "") === marketFilter);
+  const modelData = {};
   filtered.forEach(d=>{
-    const model=d["Model"]||"Unknown"; const ti=parseFloat((d["TI Applied"]||0).toString().replace(/[$,]/g,"")); const offered=parseFloat((d["Offered"]||0).toString().replace(/[$,]/g,""));
-    if(!modelData[model]) modelData[model]={count:0, ti:0, offered:0};
-    modelData[model].count+=1; modelData[model].ti+=ti; modelData[model].offered+=offered;
+    const model = d["Model"] || "Unknown";
+    const ti = parseNumber(d["TI Applied"]);
+    const offered = parseNumber(d["Offered"]);
+    if (!modelData[model]) modelData[model] = {count:0, ti:0, offered:0};
+    modelData[model].count += 1;
+    modelData[model].ti += ti;
+    modelData[model].offered += offered;
   });
-  const sortedModels=Object.entries(modelData).sort((a,b)=>b[1].ti-a[1].ti);
-  const tbody=document.querySelector("#model-table tbody"); tbody.innerHTML="";
-  const maxTI=Math.max(...sortedModels.map(([m,v])=>v.ti));
-  sortedModels.forEach(([model,val],idx)=>{
-    const avgTI=val.ti/val.count||0; const avgOff=val.offered/val.count||0;
-    let perfClass="low-performer"; if(idx<Math.ceil(sortedModels.length*0.2)) perfClass="top-performer"; else if(idx<Math.ceil(sortedModels.length*0.5)) perfClass="middle-performer";
-    const barWidth=(val.ti/maxTI)*100;
-    const row=document.createElement("tr"); row.className=perfClass;
-    row.innerHTML=`<td>${model}</td><td>${val.count}</td><td>${formatCurrency(val.ti)}</td><td>${formatCurrency(val.offered)}</td><td>${formatCurrency(avgTI.toFixed(2))}</td><td>${formatCurrency(avgOff.toFixed(2))}</td><td><div class="bar-cell"><div class="bar" style="width:${barWidth}%"></div></div></td>`;
+
+  const sortedModels = Object.entries(modelData).sort((a,b)=> b[1].ti - a[1].ti);
+  const tbody = document.querySelector("#model-table tbody");
+  tbody.innerHTML = "";
+  const maxTI = sortedModels.length ? Math.max(...sortedModels.map(([m,v])=>v.ti)) : 0 || 1;
+
+  sortedModels.forEach(([model,val], idx)=>{
+    const avgTI = val.count ? (val.ti/val.count) : 0;
+    const avgOff = val.count ? (val.offered/val.count) : 0;
+    let perfClass = "low-performer";
+    if (idx < Math.ceil(sortedModels.length * 0.2)) perfClass = "top-performer";
+    else if (idx < Math.ceil(sortedModels.length * 0.5)) perfClass = "middle-performer";
+    const barWidth = maxTI ? (val.ti / maxTI) * 100 : 0;
+    const row = document.createElement("tr");
+    row.className = perfClass;
+    row.innerHTML = `<td>${escapeHtml(model)}</td>
+                     <td>${val.count}</td>
+                     <td>${formatCurrency(val.ti)}</td>
+                     <td>${formatCurrency(val.offered)}</td>
+                     <td>${formatCurrency(avgTI.toFixed(2))}</td>
+                     <td>${formatCurrency(avgOff.toFixed(2))}</td>
+                     <td><div class="bar-cell"><div class="bar" style="width:${barWidth}%;"></div></div></td>`;
     tbody.appendChild(row);
   });
+}
+
+// small helper to avoid injecting raw HTML values (basic)
+function escapeHtml(str) {
+  if (typeof str !== "string") return str;
+  return str.replace(/[&<>"'`=\/]/g, function(s){ return ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#x3D;'
+  })[s]; });
 }
 
 async function initDashboard(){
@@ -209,8 +295,27 @@ async function initDashboard(){
   createSummaryCards(data);
   createMarketTable(data);
 
-  document.getElementById("downloadPNG").addEventListener("click", ()=>{ html2canvas(document.body).then(canvas=>{ const link=document.createElement("a"); link.download="tradeins_dashboard.png"; link.href=canvas.toDataURL("image/png"); link.click(); }); });
-  document.getElementById("downloadPDF").addEventListener("click", ()=>{ html2canvas(document.body).then(canvas=>{ const imgData = canvas.toDataURL("image/png"); const { jsPDF } = window.jspdf; const pdf = new jsPDF("p","mm","a4"); const pageWidth = pdf.internal.pageSize.getWidth(); const imgWidth = pageWidth-20; const imgHeight = (canvas.height*imgWidth)/canvas.width; pdf.addImage(imgData,"PNG",10,10,imgWidth,imgHeight); pdf.save("tradeins_dashboard.pdf"); }); });
+  document.getElementById("downloadPNG").addEventListener("click", ()=>{
+    html2canvas(document.body).then(canvas=>{
+      const link = document.createElement("a");
+      link.download = "tradeins_dashboard.png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    });
+  });
+
+  document.getElementById("downloadPDF").addEventListener("click", ()=>{
+    html2canvas(document.body).then(canvas=>{
+      const imgData = canvas.toDataURL("image/png");
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF("p","mm","a4");
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const imgWidth = pageWidth - 20;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      pdf.addImage(imgData, "PNG", 10, 10, imgWidth, imgHeight);
+      pdf.save("tradeins_dashboard.pdf");
+    });
+  });
 }
 
 initDashboard();
