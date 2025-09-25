@@ -104,8 +104,8 @@ function formatCurrency(val){ return "$"+Number(val||0).toLocaleString(); }
 
 function createSummaryCards(data){
   const totalTradeins = data.length;
-  const totalTI = data.reduce((a,b)=>a+parseFloat((b["TI Applied"]||0).replace(/[$,]/g,"")),0);
-  const totalOffered = data.reduce((a,b)=>a+parseFloat((b["Offered"]||0).replace(/[$,]/g,"")),0);
+  const totalTI = data.reduce((a,b)=>a+parseFloat((d["TI Applied"] || "0").toString().replace(/[^0-9.]/g, ""))
+  const totalOffered = data.reduce((a,b)=>a+parseFloat((b["Offered"]||0).toString().replace(/[^0-9.]/g, "")),0);
   const avgTI = totalTI/totalTradeins||0;
   const avgOffered = totalOffered/totalTradeins||0;
   const cards = [
@@ -123,8 +123,8 @@ function createMarketTable(data){
   const marketData={};
   data.forEach(d=>{
     const market=d["Market Name"]||"Unknown";
-    const ti=parseFloat((d["TI Applied"]||0).replace(/[$,]/g,""));
-    const offered=parseFloat((d["Offered"]||0).replace(/[$,]/g,""));
+    const ti=parseFloat((d["TI Applied"]||0).toString().replace(/[$,]/g,""));
+    const offered=parseFloat((d["Offered"]||0).toString().replace(/[$,]/g,""));
     if(!marketData[market]) marketData[market]={count:0, ti:0, offered:0};
     marketData[market].count+=1; marketData[market].ti+=ti; marketData[market].offered+=offered;
   });
@@ -152,7 +152,7 @@ function createStoreTable(data, marketFilter){
   let filtered = data.filter(d=>d["Market Name"]===marketFilter);
   const storeData={};
   filtered.forEach(d=>{
-    const store=d["Store Name"]||"Unknown"; const ti=parseFloat((d["TI Applied"]||0).replace(/[$,]/g,"")); const offered=parseFloat((d["Offered"]||0).replace(/[$,]/g,""));
+    const store=d["Store Name"]||"Unknown"; const ti=parseFloat((d["TI Applied"]||0).toString().replace(/[$,]/g,"")); const offered=parseFloat((d["Offered"]||0).toString().replace(/[$,]/g,""));
     if(!storeData[store]) storeData[store]={count:0, ti:0, offered:0};
     storeData[store].count+=1; storeData[store].ti+=ti; storeData[store].offered+=offered;
   });
@@ -173,7 +173,7 @@ function createModelTable(data, marketFilter){
   let filtered = data.filter(d=>d["Market Name"]===marketFilter);
   const modelData={};
   filtered.forEach(d=>{
-    const model=d["Model"]||"Unknown"; const ti=parseFloat((d["TI Applied"]||0).replace(/[$,]/g,"")); const offered=parseFloat((d["Offered"]||0).replace(/[$,]/g,""));
+    const model=d["Model"]||"Unknown"; const ti=parseFloat((d["TI Applied"]||0).toString().replace(/[$,]/g,"")); const offered=parseFloat((d["Offered"]||0).toString().replace(/[$,]/g,""));
     if(!modelData[model]) modelData[model]={count:0, ti:0, offered:0};
     modelData[model].count+=1; modelData[model].ti+=ti; modelData[model].offered+=offered;
   });
