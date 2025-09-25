@@ -104,10 +104,17 @@ function formatCurrency(val){ return "$"+Number(val||0).toLocaleString(); }
 
 function createSummaryCards(data){
   const totalTradeins = data.length;
-  const totalTI = data.reduce((a,b)=>a+parseFloat((d["TI Applied"] || "0").toString().replace(/[^0-9.]/g, ""))
-  const totalOffered = data.reduce((a,b)=>a+parseFloat((b["Offered"]||0).toString().replace(/[^0-9.]/g, "")),0);
+  const totalTI = data.reduce(
+    (a,b)=>a+parseFloat((b["TI Applied"] || "0").toString().replace(/[^0-9.]/g, "")),
+    0
+  );
+  const totalOffered = data.reduce(
+    (a,b)=>a+parseFloat((b["Offered"] || "0").toString().replace(/[^0-9.]/g, "")),
+    0
+  );
   const avgTI = totalTI/totalTradeins||0;
   const avgOffered = totalOffered/totalTradeins||0;
+
   const cards = [
     {title:"Total Trade-ins", value:totalTradeins},
     {title:"Total TI Applied", value:formatCurrency(totalTI)},
@@ -115,9 +122,16 @@ function createSummaryCards(data){
     {title:"Avg TI Applied", value:formatCurrency(avgTI.toFixed(2))},
     {title:"Avg Offered", value:formatCurrency(avgOffered.toFixed(2))}
   ];
-  const container = document.getElementById("summary-cards"); container.innerHTML="";
-  cards.forEach(c=>{ const card=document.createElement("div"); card.className="card"; card.innerHTML=`<h2>${c.title}</h2><p>${c.value}</p>`; container.appendChild(card); });
+  const container = document.getElementById("summary-cards");
+  container.innerHTML="";
+  cards.forEach(c=>{
+    const card=document.createElement("div");
+    card.className="card";
+    card.innerHTML=`<h2>${c.title}</h2><p>${c.value}</p>`;
+    container.appendChild(card);
+  });
 }
+
 
 function createMarketTable(data){
   const marketData={};
