@@ -6,28 +6,28 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
-  body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #e0f7fa, #b3e5fc); margin:0; padding:20px; display:flex; flex-direction:column; align-items:center; }
-  h1 { font-size:2rem; color:#003344; margin-bottom:20px; text-align:center; text-shadow:1px 1px 2px rgba(0,0,0,0.1);}
-  h2 { margin:20px 0 10px; color:#003344; }
-  .cards-grid {display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:15px; width:100%; max-width:1200px; margin-bottom:30px;}
-  .card {background: rgba(255,255,255,0.2); backdrop-filter: blur(12px); border-radius:15px; padding:15px; text-align:center; box-shadow:0 5px 15px rgba(0,0,0,0.1); transition: transform 0.3s, box-shadow 0.3s;}
-  .card:hover {transform: translateY(-3px); box-shadow:0 10px 25px rgba(0,0,0,0.15);}
-  .card h2 {margin:5px 0; font-size:1rem; color:#003344;}
-  .card p {margin:0; font-size:1.4rem; font-weight:bold; color:#004d66;}
-  table {width:100%; border-collapse:collapse; background: rgba(255,255,255,0.2); backdrop-filter: blur(12px); border-radius:10px; overflow:hidden; box-shadow:0 5px 15px rgba(0,0,0,0.1); margin-bottom:30px;}
-  th, td {padding:10px 12px; text-align:center; color:#003344;}
-  th {background: rgba(0,77,102,0.15);}
-  tr:nth-child(even) {background: rgba(255,255,255,0.1);}
-  tr.top-performer {background:#d4edda;}
-  tr.middle-performer {background:#fff3cd;}
-  tr.low-performer {background:#f8d7da;}
-  .bar-cell {display:flex; align-items:center; gap:5px; justify-content:flex-start; width:150px; margin:auto;}
-  .bar {height:10px; border-radius:5px; background:#0077b6; min-width:20px; max-width:140px;}
-  .download-buttons {display:flex; gap:10px; margin-bottom:20px;}
-  .download-buttons button {padding:10px 15px; border:none; border-radius:12px; background:rgba(255,255,255,0.25); backdrop-filter:blur(10px); color:#003344; font-weight:600; cursor:pointer; transition:all 0.3s;}
-  .download-buttons button:hover {background:rgba(255,255,255,0.4); transform:translateY(-2px);}
-  .drilldown-container {display:grid; grid-template-columns:1fr 1fr; gap:20px; width:100%; max-width:1200px;}
-  @media(max-width:900px){ .drilldown-container{grid-template-columns:1fr;} }
+body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #e0f7fa, #b3e5fc); margin:0; padding:20px; display:flex; flex-direction:column; align-items:center; }
+h1 { font-size:2rem; color:#003344; margin-bottom:20px; text-align:center; text-shadow:1px 1px 2px rgba(0,0,0,0.1);}
+h2 { margin:20px 0 10px; color:#003344; }
+.cards-grid {display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:15px; width:100%; max-width:1200px; margin-bottom:30px;}
+.card {background: rgba(255,255,255,0.2); backdrop-filter: blur(12px); border-radius:15px; padding:15px; text-align:center; box-shadow:0 5px 15px rgba(0,0,0,0.1); transition: transform 0.3s, box-shadow 0.3s;}
+.card:hover {transform: translateY(-3px); box-shadow:0 10px 25px rgba(0,0,0,0.15);}
+.card h2 {margin:5px 0; font-size:1rem; color:#003344;}
+.card p {margin:0; font-size:1.4rem; font-weight:bold; color:#004d66;}
+table {width:100%; border-collapse:collapse; background: rgba(255,255,255,0.2); backdrop-filter: blur(12px); border-radius:10px; overflow:hidden; box-shadow:0 5px 15px rgba(0,0,0,0.1); margin-bottom:30px;}
+th, td {padding:10px 12px; text-align:center; color:#003344;}
+th {background: rgba(0,77,102,0.15);}
+tr:nth-child(even) {background: rgba(255,255,255,0.1);}
+tr.top-performer {background:#d4edda;}
+tr.middle-performer {background:#fff3cd;}
+tr.low-performer {background:#f8d7da;}
+.bar-cell {display:flex; align-items:center; gap:5px; justify-content:flex-start; width:150px; margin:auto;}
+.bar {height:10px; border-radius:5px; background:#0077b6; min-width:20px; max-width:140px;}
+.download-buttons {display:flex; gap:10px; margin-bottom:20px;}
+.download-buttons button {padding:10px 15px; border:none; border-radius:12px; background:rgba(255,255,255,0.25); backdrop-filter:blur(10px); color:#003344; font-weight:600; cursor:pointer; transition:all 0.3s;}
+.download-buttons button:hover {background:rgba(255,255,255,0.4); transform:translateY(-2px);}
+.drilldown-container {display:grid; grid-template-columns:1fr 1fr; gap:20px; width:100%; max-width:1200px;}
+@media(max-width:900px){ .drilldown-container{grid-template-columns:1fr;} }
 </style>
 </head>
 <body>
@@ -107,6 +107,7 @@ function csvToJson(csv){
 function formatCurrency(val){ return "$"+Number(val||0).toLocaleString(); }
 function parseNumber(v){ const n=parseFloat(String(v||0).replace(/[^0-9.\-]/g,"")); return isNaN(n)?0:n; }
 
+// ================= SUMMARY CARDS =================
 function createSummaryCards(data){
   let totalCount = data.length;
   let totalCost = 0;
@@ -117,14 +118,12 @@ function createSummaryCards(data){
     const ti = parseNumber(d["TI Applied"]);
     totalCost += ti;
 
-    const statusRaw = d["Status"] || "";
-    const status = statusRaw.trim().toLowerCase();
-
+    const status = (d["Status"]||"").trim().toLowerCase();
     if(status === "approved"){
-      approvedCount += 1;
+      approvedCount +=1;
       approvedCost += ti;
     } else if(status === "not approved"){
-      notApprovedCount += 1;
+      notApprovedCount +=1;
       notApprovedCost += ti;
     }
   });
@@ -148,18 +147,18 @@ function createSummaryCards(data){
   });
 }
 
-// Generic table creator for Market, Store, Model
+// ================= GENERIC TABLE CREATOR =================
 function createTable(tableId, data, keyField){
   const tableData = {};
   data.forEach(d=>{
     const key = d[keyField] || "Unknown";
     if(!tableData[key]) tableData[key]={total:0, approvedCount:0, approvedCost:0, notApprovedCount:0, notApprovedCost:0};
     const ti = parseNumber(d["TI Applied"]);
-    tableData[key].total += 1;
+    tableData[key].total +=1;
 
     const status = (d["Status"]||"").trim().toLowerCase();
     if(status==="approved"){
-      tableData[key].approvedCount += 1;
+      tableData[key].approvedCount +=1;
       tableData[key].approvedCost += ti;
     } else if(status==="not approved"){
       tableData[key].notApprovedCount +=1;
@@ -180,8 +179,8 @@ function createTable(tableId, data, keyField){
     else if(idx < Math.ceil(sortedKeys.length*0.5)) perfClass="middle-performer";
 
     const row = document.createElement("tr");
-    row.className=perfClass;
-    row.innerHTML=`<td class="key-cell" style="cursor:pointer">${k}</td>
+    row.className = perfClass;
+    row.innerHTML = `<td class="key-cell" style="cursor:pointer">${k}</td>
       <td>${val.total}</td>
       <td>${val.approvedCount}</td>
       <td>${formatCurrency(val.approvedCost)}</td>
@@ -190,13 +189,13 @@ function createTable(tableId, data, keyField){
       <td><div class="bar-cell"><div class="bar" style="width:${(val.approvedCost/maxApproved)*100}%"></div></div></td>`;
     tbody.appendChild(row);
 
-    // Drilldown for Market table only
     if(tableId==="market-table"){
       row.querySelector(".key-cell").addEventListener("click",()=>createDrilldown(data,k));
     }
   });
 }
 
+// ================= TABLE WRAPPERS =================
 function createMarketTable(data){ createTable("market-table", data, "Market Name"); }
 function createStoreTable(data, marketFilter){ 
   const filtered = data.filter(d=>d["Market Name"]===marketFilter);
@@ -207,12 +206,14 @@ function createModelTable(data, marketFilter){
   createTable("model-table", filtered, "Model");
 }
 
+// ================= DRILLDOWN =================
 function createDrilldown(data, marketFilter){
   document.getElementById("drilldown").style.display="grid";
   createStoreTable(data, marketFilter);
   createModelTable(data, marketFilter);
 }
 
+// ================= INIT DASHBOARD =================
 async function initDashboard(){
   const data = await fetchData();
   createSummaryCards(data);
