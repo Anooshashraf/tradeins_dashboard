@@ -150,7 +150,7 @@ tr.low-performer { background: #f8d7da; }
 /* ===================== Drilldown Container ===================== */
 .drilldown-container {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
   gap: 30px;
   width: 100%;
   max-width: 1200px;
@@ -167,47 +167,38 @@ tr.low-performer { background: #f8d7da; }
   flex-direction: column;
   align-items: center;
   transition: transform 0.3s, box-shadow 0.3s;
-}
-
-.drilldown-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 15px 35px rgba(0,0,0,0.15);
-}
-
-.drilldown-card h2 {
-  margin-bottom: 15px;
-  text-align: center;
+  overflow: hidden;
 }
 
 .drilldown-card table {
   width: 100%;
   border-collapse: collapse;
   border-radius: 12px;
-  overflow-x: auto;
   background: rgba(255,255,255,0.15);
   box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+  overflow-x: auto;
+  display: block;       /* make table scrollable */
+  max-height: 400px;    /* prevent huge height */
 }
 
-.drilldown-card th, .drilldown-card td {
-  padding: 10px 12px;
-  text-align: center;
-  font-size: 0.95rem;
+.drilldown-card tbody {
+  display: block;       /* scrollable tbody */
+  overflow-y: auto;
+  max-height: 350px;
 }
 
-.drilldown-card tr:nth-child(even) {
-  background: rgba(255,255,255,0.1);
+.drilldown-card tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
 }
 
-.drilldown-card tr.top-performer { background: #d4edda; }
-.drilldown-card tr.middle-performer { background: #fff3cd; }
-.drilldown-card tr.low-performer { background: #f8d7da; }
-
-/* Responsive */
 @media(max-width: 900px) {
   .drilldown-container {
     grid-template-columns: 1fr;
   }
 }
+
 </style>
 </head>
 <body>
