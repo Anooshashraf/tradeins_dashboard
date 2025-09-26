@@ -364,22 +364,22 @@ initDashboard();
 /* ================== BODY ================== */
 body {
   font-family: 'Segoe UI', sans-serif;
-  background: #f4f6f9;
+  background: #f8fafc;
   margin: 0;
   padding: 30px;
-  color: #1f2d3d;
+  color: #1f2937;
 }
 
 /* ================== HEADINGS ================== */
 h1 {
   text-align: center;
-  font-size: 2.5rem;
+  font-size: 2.3rem;
   margin-bottom: 30px;
   color: #1e3a8a;
   animation: fadeIn 0.8s ease;
 }
 h2 {
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   margin: 20px 0 10px;
   color: #334155;
 }
@@ -390,12 +390,11 @@ h2 {
   justify-content: center;
   gap: 15px;
   margin-bottom: 40px;
-  animation: fadeInUp 1s ease;
 }
 .download-buttons button {
   padding: 12px 28px;
   border: none;
-  border-radius: 12px;
+  border-radius: 10px;
   background: linear-gradient(135deg, #2563eb, #1e40af);
   color: #fff;
   font-weight: 600;
@@ -418,28 +417,28 @@ h2 {
 }
 .card {
   background: #e2e8f0;
-  border-radius: 16px;
-  padding: 25px 20px;
+  border-radius: 14px;
+  padding: 20px;
   text-align: center;
   width: 220px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-  transform: scale(0.95);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
   opacity: 0;
+  transform: scale(0.95);
   animation: popIn 0.6s forwards;
 }
-.card:nth-child(1) { animation-delay: 0.1s; }
-.card:nth-child(2) { animation-delay: 0.2s; }
-.card:nth-child(3) { animation-delay: 0.3s; }
-.card:nth-child(4) { animation-delay: 0.4s; }
-.card:nth-child(5) { animation-delay: 0.5s; }
-.card:nth-child(6) { animation-delay: 0.6s; }
+.card:nth-child(1){animation-delay:0.1s;}
+.card:nth-child(2){animation-delay:0.2s;}
+.card:nth-child(3){animation-delay:0.3s;}
+.card:nth-child(4){animation-delay:0.4s;}
+.card:nth-child(5){animation-delay:0.5s;}
+.card:nth-child(6){animation-delay:0.6s;}
 .card h2 {
   font-size: 1.1rem;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   color: #1e3a8a;
 }
 .card p {
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   font-weight: bold;
   color: #2563eb;
 }
@@ -454,11 +453,11 @@ table {
   border-collapse: collapse;
   min-width: 900px;
   background: #fff;
-  border-radius: 12px;
+  border-radius: 10px;
   box-shadow: 0 5px 15px rgba(0,0,0,0.05);
 }
 th, td {
-  padding: 14px 18px;
+  padding: 14px 16px;
   text-align: center;
   font-size: 0.95rem;
 }
@@ -471,17 +470,11 @@ tbody tr {
   opacity: 0;
   animation: fadeInUp 0.6s forwards;
 }
-tbody tr:nth-child(1) { animation-delay: 0.1s; }
-tbody tr:nth-child(2) { animation-delay: 0.2s; }
-tbody tr:nth-child(3) { animation-delay: 0.3s; }
-tbody tr:nth-child(4) { animation-delay: 0.4s; }
-
-tr:nth-child(even) { background: #f1f5f9; }
-
-/* Darker shades so text stays visible */
-tr.top-performer { background: #1e40af; color: #fff; }
-tr.middle-performer { background: #2563eb; color: #fff; }
-tr.low-performer { background: #3b82f6; color: #fff; }
+tbody tr:nth-child(1){animation-delay:0.1s;}
+tbody tr:nth-child(2){animation-delay:0.2s;}
+tbody tr:nth-child(3){animation-delay:0.3s;}
+tbody tr:nth-child(4){animation-delay:0.4s;}
+tr:nth-child(even){background:#f9fafb;}
 
 /* ================== PROGRESS BARS ================== */
 .bar-cell {
@@ -491,53 +484,42 @@ tr.low-performer { background: #3b82f6; color: #fff; }
 .bar {
   height: 14px;
   border-radius: 6px;
-  background: linear-gradient(90deg, #2563eb, #3b82f6);
   animation: growBar 1.2s ease forwards;
 }
+.bar-high { background: linear-gradient(90deg, #16a34a, #22c55e); } /* Green */
+.bar-mid  { background: linear-gradient(90deg, #eab308, #facc15); } /* Yellow */
+.bar-low  { background: linear-gradient(90deg, #dc2626, #ef4444); } /* Red */
 
 /* ================== DRILLDOWN CARDS ================== */
 .drilldown-container {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 30px;
+  gap: 25px;
 }
 .drilldown-card {
   background: #fff;
-  border-radius: 16px;
-  padding: 25px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  border-radius: 14px;
+  padding: 22px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
   flex: 1 1 450px;
   min-width: 450px;
   max-width: 600px;
   animation: fadeInUp 0.8s ease;
 }
-.drilldown-card table { min-width: 100%; }
+.drilldown-card table{min-width:100%;}
 
 /* ================== ANIMATIONS ================== */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(15px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes popIn {
-  to { transform: scale(1); opacity: 1; }
-}
-@keyframes growBar {
-  from { width: 0; }
-  to { width: var(--bar-width, 70%); }
-}
+@keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+@keyframes fadeInUp { from{opacity:0;transform:translateY(15px);} to{opacity:1;transform:translateY(0);} }
+@keyframes popIn { to{opacity:1;transform:scale(1);} }
+@keyframes growBar { from{width:0;} to{width:var(--bar-width,70%);} }
 
 /* ================== RESPONSIVE ================== */
-@media(max-width: 900px) {
-  .cards-grid, .drilldown-container { flex-direction: column; align-items: center; }
-  .card, .drilldown-card { width: 90%; min-width: unset; }
+@media(max-width:900px){
+  .cards-grid,.drilldown-container{flex-direction:column;align-items:center;}
+  .card,.drilldown-card{width:90%;min-width:unset;}
 }
-
-
 </style>
 </head>
 <body>
@@ -548,8 +530,7 @@ tr.low-performer { background: #3b82f6; color: #fff; }
   <button id="downloadPNG">⬇️ Download PNG</button>
   <button id="downloadPDF">⬇️ Download PDF</button>
 </div>
-
-<div class="cards-grid" id="summary-cards"></div>
+  <div class="cards-grid" id="summary-cards"></div>
 
 <h2>📊 Market Performance</h2>
 <div class="table-container">
@@ -610,6 +591,8 @@ tr.low-performer { background: #3b82f6; color: #fff; }
         <tbody></tbody>
       </table>
     </div>
+
+
   </div>
 </div>
 
