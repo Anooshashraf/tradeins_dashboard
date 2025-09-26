@@ -503,18 +503,18 @@ tbody tr:nth-child(even) {
 /* ================== DRILLDOWN CARDS ================== */
 .drilldown-container {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  flex-direction: column;   /* stack vertically */
+  align-items: center;      /* center horizontally */
   gap: 25px;
+  width: 100%;
 }
 .drilldown-card {
-  background: #fff;
-  border-radius: 14px;
-  padding: 22px;
+  padding: 25px;
+  box-sizing: border-box; 
   box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-  flex: 1 1 450px;
-  min-width: 450px;
-  max-width: 600px;
+  /* flex: 1 1 450px; */
+  width: 100%;
+  max-width: 1200px;
   animation: fadeInUp 0.8s ease;
 }
 .drilldown-card table{min-width:100%;}
