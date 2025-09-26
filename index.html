@@ -5,7 +5,7 @@
 <title>Trade-ins Interactive Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<style>
+<!-- <style>
 body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #e0f7fa, #b3e5fc); margin:0; padding:20px; display:flex; flex-direction:column; align-items:center; }
 h1 { font-size:2rem; color:#003344; margin-bottom:20px; text-align:center; text-shadow:1px 1px 2px rgba(0,0,0,0.1);}
 h2 { margin:20px 0 10px; color:#003344; }
@@ -38,7 +38,197 @@ width: 100%;
   box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 .drilldown-container table { width: 100%; }
 @media(max-width:900px){ .drilldown-container{grid-template-columns:1fr;} }
+</style> -->
+<style>
+/* ===================== Body & Headings ===================== */
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #e0f7fa, #b3e5fc);
+  margin: 0;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #003344;
+}
+
+h1 {
+  font-size: 2.2rem;
+  text-align: center;
+  margin-bottom: 25px;
+  color: #003344;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}
+
+h2 {
+  font-size: 1.4rem;
+  margin: 20px 0 10px;
+  color: #003344;
+}
+
+/* ===================== Download Buttons ===================== */
+.download-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 25px;
+}
+
+.download-buttons button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.25);
+  backdrop-filter: blur(10px);
+  color: #003344;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.download-buttons button:hover {
+  background: rgba(255,255,255,0.45);
+  transform: translateY(-2px);
+}
+
+/* ===================== Summary Cards ===================== */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 20px;
+  width: 100%;
+  max-width: 1200px;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: rgba(255,255,255,0.25);
+  backdrop-filter: blur(15px);
+  border-radius: 15px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+}
+
+.card h2 {
+  margin: 0 0 10px;
+  font-size: 1.1rem;
+  color: #003344;
+}
+
+.card p {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #004d66;
+}
+
+/* ===================== Tables ===================== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(15px);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  margin-bottom: 30px;
+}
+
+th, td {
+  padding: 12px 15px;
+  text-align: center;
+  color: #003344;
+  font-size: 0.95rem;
+}
+
+th {
+  background: rgba(0,77,102,0.2);
+  font-weight: 600;
+}
+
+tr:nth-child(even) {
+  background: rgba(255,255,255,0.1);
+}
+
+tr.top-performer {
+  background: #d4edda;
+}
+
+tr.middle-performer {
+  background: #fff3cd;
+}
+
+tr.low-performer {
+  background: #f8d7da;
+}
+
+/* ===================== Progress Bars ===================== */
+.bar-cell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 150px;
+  margin: auto;
+}
+
+.bar {
+  height: 10px;
+  border-radius: 5px;
+  background: #0077b6;
+  min-width: 20px;
+  max-width: 140px;
+}
+
+/* ===================== Drilldown Container ===================== */
+.drilldown-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+  width: 100%;
+  max-width: 1200px;
+  margin-bottom: 30px;
+}
+
+.drilldown-container > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  background: rgba(255,255,255,0.25);
+  backdrop-filter: blur(15px);
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+.drilldown-container table {
+  width: 100%;
+}
+
+/* ===================== Responsive ===================== */
+@media(max-width: 900px) {
+  .drilldown-container {
+    grid-template-columns: 1fr;
+  }
+  .cards-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media(max-width: 600px) {
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
 </style>
+
 </head>
 <body>
 <h1>📊 Trade-ins Interactive Dashboard</h1>
