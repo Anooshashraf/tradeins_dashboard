@@ -1,44 +1,11 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>Trade-ins Interactive Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<!-- <style>
-body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #e0f7fa, #b3e5fc); margin:0; padding:20px; display:flex; flex-direction:column; align-items:center; }
-h1 { font-size:2rem; color:#003344; margin-bottom:20px; text-align:center; text-shadow:1px 1px 2px rgba(0,0,0,0.1);}
-h2 { margin:20px 0 10px; color:#003344; }
-.cards-grid {display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:15px; width:100%; max-width:1200px; margin-bottom:30px;}
-.card {background: rgba(255,255,255,0.2); backdrop-filter: blur(12px); border-radius:15px; padding:15px; text-align:center; box-shadow:0 5px 15px rgba(0,0,0,0.1); transition: transform 0.3s, box-shadow 0.3s;}
-.card:hover {transform: translateY(-3px); box-shadow:0 10px 25px rgba(0,0,0,0.15);}
-.card h2 {margin:5px 0; font-size:1rem; color:#003344;}
-.card p {margin:0; font-size:1.4rem; font-weight:bold; color:#004d66;}
-table {width:100%; border-collapse:collapse; background: rgba(255,255,255,0.2); backdrop-filter: blur(12px); border-radius:10px; overflow:hidden; box-shadow:0 5px 15px rgba(0,0,0,0.1); margin-bottom:30px;}
-th, td {padding:10px 12px; text-align:center; color:#003344;}
-th {background: rgba(0,77,102,0.15);}
-tr:nth-child(even) {background: rgba(255,255,255,0.1);}
-tr.top-performer {background:#d4edda;}
-tr.middle-performer {background:#fff3cd;}
-tr.low-performer {background:#f8d7da;}
-.bar-cell {display:flex; align-items:center; gap:5px; justify-content:flex-start; width:150px; margin:auto;}
-.bar {height:10px; border-radius:5px; background:#0077b6; min-width:20px; max-width:140px;}
-.download-buttons {display:flex; gap:10px; margin-bottom:20px;}
-.download-buttons button {padding:10px 15px; border:none; border-radius:12px; background:rgba(255,255,255,0.25); backdrop-filter:blur(10px); color:#003344; font-weight:600; cursor:pointer; transition:all 0.3s;}
-.download-buttons button:hover {background:rgba(255,255,255,0.4); transform:translateY(-2px);}
-.drilldown-container {display:grid; grid-template-columns:1fr 1fr; gap:20px; width:100%; max-width:1200px;}
-width: 100%;
-  display: flex;
-  flex-direction: column;   
-  align-items: center;      
-  background: rgba(255,255,255,0.2);
-  backdrop-filter: blur(12px);
-  border-radius: 12px;
-  padding: 15px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-.drilldown-container table { width: 100%; }
-@media(max-width:900px){ .drilldown-container{grid-template-columns:1fr;} }
-</style> -->
+
 <style>
 /* ===================== Body & Headings ===================== */
 body {
@@ -445,4 +412,447 @@ async function initDashboard(){
 initDashboard();
 </script>
 </body>
+</html> -->
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Trade-ins Interactive Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+/* ===================== Body & Headings ===================== */
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #e0f7fa, #b3e5fc);
+  margin: 0;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #003344;
+}
+
+h1 {
+  font-size: 2.2rem;
+  text-align: center;
+  margin-bottom: 25px;
+  color: #003344;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}
+
+h2 {
+  font-size: 1.4rem;
+  margin: 20px 0 10px;
+  color: #003344;
+}
+
+/* ===================== Download Buttons ===================== */
+.download-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 25px;
+}
+
+.download-buttons button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.25);
+  backdrop-filter: blur(10px);
+  color: #003344;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.download-buttons button:hover {
+  background: rgba(255,255,255,0.45);
+  transform: translateY(-2px);
+}
+
+/* ===================== Summary Cards ===================== */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 20px;
+  width: 100%;
+  max-width: 1200px;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: rgba(255,255,255,0.25);
+  backdrop-filter: blur(15px);
+  border-radius: 15px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+}
+
+.card h2 {
+  margin: 0 0 10px;
+  font-size: 1.1rem;
+  color: #003344;
+}
+
+.card p {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #004d66;
+}
+
+/* ===================== Tables ===================== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(15px);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  margin-bottom: 30px;
+}
+
+th, td {
+  padding: 12px 15px;
+  text-align: center;
+  color: #003344;
+  font-size: 0.95rem;
+}
+
+th {
+  background: rgba(0,77,102,0.2);
+  font-weight: 600;
+}
+
+tr:nth-child(even) {
+  background: rgba(255,255,255,0.1);
+}
+
+tr.top-performer {
+  background: #d4edda;
+}
+
+tr.middle-performer {
+  background: #fff3cd;
+}
+
+tr.low-performer {
+  background: #f8d7da;
+}
+
+/* ===================== Progress Bars ===================== */
+.bar-cell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 150px;
+  margin: auto;
+}
+
+.bar {
+  height: 10px;
+  border-radius: 5px;
+  background: #0077b6;
+  min-width: 20px;
+  max-width: 140px;
+}
+
+/* ===================== Drilldown Container ===================== */
+.drilldown-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+  width: 100%;
+  max-width: 1200px;
+  margin-bottom: 30px;
+}
+
+.drilldown-container > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  background: rgba(255,255,255,0.25);
+  backdrop-filter: blur(15px);
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+.drilldown-container table {
+  width: 100%;
+}
+
+/* ===================== Responsive ===================== */
+@media(max-width: 900px) {
+  .drilldown-container {
+    grid-template-columns: 1fr;
+  }
+  .cards-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media(max-width: 600px) {
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+<body>
+
+<h1>📊 Trade-ins Interactive Dashboard</h1>
+
+<div class="download-buttons">
+  <button id="downloadPNG">⬇️ Download as PNG</button>
+  <button id="downloadPDF">⬇️ Download as PDF</button>
+</div>
+
+<div class="cards-grid" id="summary-cards"></div>
+
+<h2>📊 Market Performance</h2>
+<table id="market-table" aria-live="polite">
+<thead>
+<tr>
+<th>Market</th>
+<th>Total Trade-ins</th>
+<th>Total Trade-ins Cost</th>
+<th>Approved Count</th>
+<th>Approved Cost</th>
+<th>Not Approved Count</th>
+<th>Not Approved Cost</th>
+<th>Performance</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+
+<div class="drilldown-container" id="drilldown" style="display:none;">
+  <div>
+    <h2>🏬 Store-wise Performance</h2>
+    <table id="store-table">
+      <thead>
+        <tr>
+          <th>Store</th>
+          <th>Total Trade-ins</th>
+          <th>Total Trade-ins Cost</th>
+          <th>Approved Count</th>
+          <th>Approved Cost</th>
+          <th>Not Approved Count</th>
+          <th>Not Approved Cost</th>
+          <th>Performance</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <div>
+    <h2>📋 Model-wise Performance</h2>
+    <table id="model-table">
+      <thead>
+        <tr>
+          <th>Model</th>
+          <th>Total Trade-ins</th>
+          <th>Total Trade-ins Cost</th>
+          <th>Approved Count</th>
+          <th>Approved Cost</th>
+          <th>Not Approved Count</th>
+          <th>Not Approved Cost</th>
+          <th>Performance</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const googleSheetCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSfrcSWw9-PyEe7nZs-BotPkvTPsln57Ba-2u6AFy8woMG0H21lObx0jMwCbbQYvw/pub?gid=838451932&single=true&output=csv";
+
+async function fetchData() {
+  try {
+    const response = await fetch(googleSheetCSV);
+    if (!response.ok) throw new Error("Network response was not ok");
+    const csvText = await response.text();
+    return csvToJson(csvText);
+  } catch (err) {
+    alert("Error loading Google Sheet: " + err.message);
+    console.error(err);
+    return [];
+  }
+}
+
+function csvToJson(csv){
+  const lines = csv.split("\n").filter(l=>l.trim()!=="");
+  const headers = lines[0].split(",").map(h=>h.trim());
+  return lines.slice(1)
+    .map(l=>{
+      const values = l.split(",").map(v=>v.trim());
+      const obj = {};
+      headers.forEach((h,i)=> obj[h] = values[i] || "");
+      return obj;
+    })
+    .filter(row => row["Market Name"]);
+}
+
+function formatCurrency(val){ return "$"+Number(val||0).toLocaleString(); }
+function parseNumber(v){ const n=parseFloat(String(v||0).replace(/[^0-9.\-]/g,"")); return isNaN(n)?0:n; }
+
+// ================= SUMMARY CARDS =================
+function createSummaryCards(data){
+  let totalCount = data.length;
+  let totalCost = 0;
+  let approvedCount = 0, approvedCost = 0;
+  let notApprovedCount = 0, notApprovedCost = 0;
+
+  data.forEach(d=>{
+    const ti = parseNumber(d["TI Applied"]);
+    totalCost += ti;
+    const status = (d["Status"]||"").trim().toLowerCase();
+    if(status === "approved"){
+      approvedCount +=1;
+      approvedCost += ti;
+    } else if(status === "not approved"){
+      notApprovedCount +=1;
+      notApprovedCost += ti;
+    }
+  });
+
+  const cards = [
+    {title:"Total Trade-ins Count", value:totalCount},
+    {title:"Total Trade-ins Cost", value:formatCurrency(totalCost)},
+    {title:"Approved Count", value:approvedCount},
+    {title:"Approved Cost", value:formatCurrency(approvedCost)},
+    {title:"Not Approved Count", value:notApprovedCount},
+    {title:"Not Approved Cost", value:formatCurrency(notApprovedCost)}
+  ];
+
+  const container = document.getElementById("summary-cards");
+  container.innerHTML="";
+  cards.forEach(c=>{
+    const card = document.createElement("div");
+    card.className="card";
+    card.innerHTML=`<h2>${c.title}</h2><p>${c.value}</p>`;
+    container.appendChild(card);
+  });
+}
+
+// ================= GENERIC TABLE CREATOR =================
+function createTable(tableId, data, keyField){
+  const tableData = {};
+  data.forEach(d=>{
+    const key = d[keyField] || "Unknown";
+    if(!tableData[key]) tableData[key]={total:0, totalCost:0, approvedCount:0, approvedCost:0, notApprovedCount:0, notApprovedCost:0};
+    const ti = parseNumber(d["TI Applied"]);
+    tableData[key].total +=1;
+    tableData[key].totalCost += ti;
+
+    const status = (d["Status"]||"").trim().toLowerCase();
+    if(status==="approved"){
+      tableData[key].approvedCount +=1;
+      tableData[key].approvedCost += ti;
+    } else if(status==="not approved"){
+      tableData[key].notApprovedCount +=1;
+      tableData[key].notApprovedCost += ti;
+    }
+  });
+
+  const sortedKeys = Object.keys(tableData).sort((a,b)=>tableData[b].approvedCost - tableData[a].approvedCost);
+  const tbody = document.querySelector(`#${tableId} tbody`);
+  tbody.innerHTML="";
+
+  const maxApproved = sortedKeys.length ? Math.max(...sortedKeys.map(k=>tableData[k].approvedCost)) : 1;
+
+  sortedKeys.forEach((k,idx)=>{
+    const val = tableData[k];
+    let perfClass="low-performer";
+    if(idx < Math.ceil(sortedKeys.length*0.2)) perfClass="top-performer";
+    else if(idx < Math.ceil(sortedKeys.length*0.5)) perfClass="middle-performer";
+
+    const row = document.createElement("tr");
+    row.className = perfClass;
+    row.innerHTML = `<td class="key-cell" style="cursor:pointer">${k}</td>
+      <td>${val.total}</td>
+      <td>${formatCurrency(val.totalCost)}</td>
+      <td>${val.approvedCount}</td>
+      <td>${formatCurrency(val.approvedCost)}</td>
+      <td>${val.notApprovedCount}</td>
+      <td>${formatCurrency(val.notApprovedCost)}</td>
+      <td><div class="bar-cell"><div class="bar" style="width:${(val.approvedCost/maxApproved)*100}%"></div></div></td>`;
+    tbody.appendChild(row);
+
+    if(tableId==="market-table"){
+      row.querySelector(".key-cell").addEventListener("click",()=>createDrilldown(data,k));
+    }
+  });
+}
+
+// ================= TABLE WRAPPERS =================
+function createMarketTable(data){ createTable("market-table", data, "Market Name"); }
+function createStoreTable(data, marketFilter){ 
+  const filtered = data.filter(d=>d["Market Name"]===marketFilter);
+  createTable("store-table", filtered, "Store Name");
+}
+function createModelTable(data, marketFilter){
+  const filtered = data.filter(d=>d["Market Name"]===marketFilter);
+  createTable("model-table", filtered, "Model");
+}
+
+// ================= DRILLDOWN =================
+function createDrilldown(data, marketFilter){
+  document.getElementById("drilldown").style.display="grid";
+  createStoreTable(data, marketFilter);
+  createModelTable(data, marketFilter);
+}
+
+// ================= INIT DASHBOARD =================
+async function initDashboard(){
+  const data = await fetchData();
+  createSummaryCards(data);
+  createMarketTable(data);
+
+  document.getElementById("downloadPNG").addEventListener("click", ()=>{
+    html2canvas(document.body).then(canvas=>{
+      const link=document.createElement("a");
+      link.download="tradeins_dashboard.png";
+      link.href=canvas.toDataURL("image/png");
+      link.click();
+    });
+  });
+
+  document.getElementById("downloadPDF").addEventListener("click", ()=>{
+    html2canvas(document.body).then(canvas=>{
+      const imgData = canvas.toDataURL("image/png");
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF("p","mm","a4");
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const imgWidth = pageWidth-20;
+      const imgHeight = (canvas.height*imgWidth)/canvas.width;
+      pdf.addImage(imgData,"PNG",10,10,imgWidth,imgHeight);
+      pdf.save("tradeins_dashboard.pdf");
+    });
+  });
+}
+
+initDashboard();
+</script>
+</body>
 </html>
+
