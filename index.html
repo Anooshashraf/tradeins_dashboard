@@ -647,34 +647,31 @@ function createSummaryCards(data){
 }
 
 // ===================== TABLE CREATION =====================
-function createTable(tableId, data, keyField){
+function createTable(tableId,data,keyField){
   const tableData={};
   data.forEach(d=>{
     const key=d[keyField]||"Unknown";
-    if(!tableData[key]) tableData[key]={total:0,totalCost:0,approvedCount:0,approvedCost:0,notApprovedCount:0,notApprovedCost:0};
-    const ti=parseNumber(d["TI Applied"]);
-    tableData[key].total++; tableData[key].totalCost+=ti;
+    if(!tableData[key])tableData[key]={total:0,totalCost:0,approvedCount:0,approvedCost:0,notApprovedCount:0,notApprovedCost:0};
+    const ti=parseNumber(d["TI Applied"]);tableData[key].total++;tableData[key].totalCost+=ti;
     const status=(d["Status"]||"").toLowerCase();
-    if(status==="approved"){ tableData[key].approvedCount++; tableData[key].approvedCost+=ti; }
-    else if(status==="not approved"){ tableData[key].notApprovedCount++; tableData[key].notApprovedCost+=ti; }
+    if(status==="approved"){tableData[key].approvedCount++;tableData[key].approvedCost+=ti;}
+    else if(status==="not approved"){tableData[key].notApprovedCount++;tableData[key].notApprovedCost+=ti;}
   });
-  const sortedKeys=Object.keys(tableData).sort((a,b)=>tableData[b].approvedCost-tableData[a].approvedCost);
-  const tbody=document.querySelector(`#${tableId} tbody`); tbody.innerHTML="";
-  const maxApproved = sortedKeys.length?Math.max(...sortedKeys.map(k=>tableData[k].approvedCost)):1;
-  sortedKeys.forEach((k,idx)=>{
-    const val=tableData[k];
-    let perfClass="low-performer"; if(idx<Math.ceil(sortedKeys.length*0.2)) perfClass="top-performer"; else if(idx<Math.ceil(sortedKeys.length*0.5)) perfClass="middle-performer";
-    const row=document.createElement("tr"); row.className=perfClass;
+  const keys=Object.keys(tableData).sort((a,b)=>tableData[b].approvedCost-tableData[a].approvedCost);
+  const tbody=document.querySelector(`#${tableId} tbody`);tbody.innerHTML="";
+  const maxApproved=Math.max(...keys.map(k=>tableData[k].approvedCost),1);
+  keys.forEach(k=>{
+    const v=tableData[k];
+    const percent=(v.approvedCost/maxApproved)*100;
+    let barClass="bar-low"; if(percent>=70)barClass="bar-high"; else if(percent>=40)barClass="bar-mid";
+    const row=document.createElement("tr");
     row.innerHTML=`<td class="key-cell" style="cursor:pointer">${k}</td>
-      <td>${val.total}</td>
-      <td>${formatCurrency(val.totalCost)}</td>
-      <td>${val.approvedCount}</td>
-      <td>${formatCurrency(val.approvedCost)}</td>
-      <td>${val.notApprovedCount}</td>
-      <td>${formatCurrency(val.notApprovedCost)}</td>
-      <td><div class="bar-cell"><div class="bar" style="width:${(val.approvedCost/maxApproved)*100}%"></div></div></td>`;
+    <td>${v.total}</td><td>${formatCurrency(v.totalCost)}</td>
+    <td>${v.approvedCount}</td><td>${formatCurrency(v.approvedCost)}</td>
+    <td>${v.notApprovedCount}</td><td>${formatCurrency(v.notApprovedCost)}</td>
+    <td><div class="bar-cell"><div class="bar ${barClass}" style="--bar-width:${percent}%;width:${percent}%"></div></div></td>`;
     tbody.appendChild(row);
-    if(tableId==="market-table") row.querySelector(".key-cell").addEventListener("click",()=>createDrilldown(data,k));
+    if(tableId==="market-table")row.querySelector(".key-cell").addEventListener("click",()=>createDrilldown(data,k));
   });
 }
 
