@@ -119,10 +119,10 @@ function createSummaryCards(data){
     totalCost += ti;
 
     const status = (d["Status"]||"").trim().toLowerCase();
-    if(status === "approved"){
+    if(status === "Approved"){
       approvedCount +=1;
       approvedCost += ti;
-    } else if(status === "not approved"){
+    } else if(status === "Not Approved"){
       notApprovedCount +=1;
       notApprovedCost += ti;
     }
@@ -157,10 +157,10 @@ function createTable(tableId, data, keyField){
     tableData[key].total +=1;
 
     const status = (d["Status"]||"").trim().toLowerCase();
-    if(status==="approved"){
+    if(status==="Approved"){
       tableData[key].approvedCount +=1;
       tableData[key].approvedCost += ti;
-    } else if(status==="not approved"){
+    } else if(status==="Not Approved"){
       tableData[key].notApprovedCount +=1;
       tableData[key].notApprovedCost += ti;
     }
