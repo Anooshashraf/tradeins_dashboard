@@ -177,13 +177,11 @@ tr.low-performer { background: #f8d7da; }
   border-radius: 12px;
   background: rgba(255,255,255,0.15);
   box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
-  overflow-x: auto;
-  display: block;       /* make table scrollable */
-  max-height: 400px;    /* prevent huge height */
+  overflow-x: visible;
+  max-height: none;    /* prevent huge height */
 }
 
-.drilldown-card tbody {
-  display: block;       /* scrollable tbody */
+.drilldown-card tbody {    
   overflow-y: auto;
   max-height: 350px;
 }
