@@ -109,17 +109,23 @@ function parseNumber(v){ const n=parseFloat(String(v||0).replace(/[^0-9.\-]/g,""
 
 function createSummaryCards(data){
   let totalCount = data.length;
-  let totalCost = data.reduce((a,b)=>a+parseNumber(b["TI Applied"]),0);
+  let totalCost = 0;
   let approvedCount = 0, approvedCost = 0;
   let notApprovedCount = 0, notApprovedCost = 0;
 
   data.forEach(d=>{
-    const status = (d["Status"]||"").toLowerCase();
     const ti = parseNumber(d["TI Applied"]);
-    if(status==="approved"){
-      approvedCount+=1; approvedCost+=ti;
-    } else {
-      notApprovedCount+=1; notApprovedCost+=ti;
+    totalCost += ti;
+
+    const statusRaw = d["Status"] || "";
+    const status = statusRaw.trim().toLowerCase();
+
+    if(status === "approved"){
+      approvedCount += 1;
+      approvedCost += ti;
+    } else if(status === "not approved"){
+      notApprovedCount += 1;
+      notApprovedCost += ti;
     }
   });
 
@@ -142,11 +148,70 @@ function createSummaryCards(data){
   });
 }
 
-// Tables creation functions remain the same as previous code
-// createMarketTable, createDrilldown, createStoreTable, createModelTable
-// with 4 separate columns for Approved / Not Approved counts and costs
+// Generic table creator for Market, Store, Model
+function createTable(tableId, data, keyField){
+  const tableData = {};
+  data.forEach(d=>{
+    const key = d[keyField] || "Unknown";
+    if(!tableData[key]) tableData[key]={total:0, approvedCount:0, approvedCost:0, notApprovedCount:0, notApprovedCost:0};
+    const ti = parseNumber(d["TI Applied"]);
+    tableData[key].total += 1;
 
-// The rest of the functions are same as before, with bar width using Approved Cost
+    const status = (d["Status"]||"").trim().toLowerCase();
+    if(status==="approved"){
+      tableData[key].approvedCount += 1;
+      tableData[key].approvedCost += ti;
+    } else if(status==="not approved"){
+      tableData[key].notApprovedCount +=1;
+      tableData[key].notApprovedCost += ti;
+    }
+  });
+
+  const sortedKeys = Object.keys(tableData).sort((a,b)=>tableData[b].approvedCost - tableData[a].approvedCost);
+  const tbody = document.querySelector(`#${tableId} tbody`);
+  tbody.innerHTML="";
+
+  const maxApproved = sortedKeys.length ? Math.max(...sortedKeys.map(k=>tableData[k].approvedCost)) : 1;
+
+  sortedKeys.forEach((k,idx)=>{
+    const val = tableData[k];
+    let perfClass="low-performer";
+    if(idx < Math.ceil(sortedKeys.length*0.2)) perfClass="top-performer";
+    else if(idx < Math.ceil(sortedKeys.length*0.5)) perfClass="middle-performer";
+
+    const row = document.createElement("tr");
+    row.className=perfClass;
+    row.innerHTML=`<td class="key-cell" style="cursor:pointer">${k}</td>
+      <td>${val.total}</td>
+      <td>${val.approvedCount}</td>
+      <td>${formatCurrency(val.approvedCost)}</td>
+      <td>${val.notApprovedCount}</td>
+      <td>${formatCurrency(val.notApprovedCost)}</td>
+      <td><div class="bar-cell"><div class="bar" style="width:${(val.approvedCost/maxApproved)*100}%"></div></div></td>`;
+    tbody.appendChild(row);
+
+    // Drilldown for Market table only
+    if(tableId==="market-table"){
+      row.querySelector(".key-cell").addEventListener("click",()=>createDrilldown(data,k));
+    }
+  });
+}
+
+function createMarketTable(data){ createTable("market-table", data, "Market Name"); }
+function createStoreTable(data, marketFilter){ 
+  const filtered = data.filter(d=>d["Market Name"]===marketFilter);
+  createTable("store-table", filtered, "Store Name");
+}
+function createModelTable(data, marketFilter){
+  const filtered = data.filter(d=>d["Market Name"]===marketFilter);
+  createTable("model-table", filtered, "Model");
+}
+
+function createDrilldown(data, marketFilter){
+  document.getElementById("drilldown").style.display="grid";
+  createStoreTable(data, marketFilter);
+  createModelTable(data, marketFilter);
+}
 
 async function initDashboard(){
   const data = await fetchData();
