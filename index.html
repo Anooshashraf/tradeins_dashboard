@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -349,4 +349,390 @@ initDashboard();
 </script>
 
 </body>
+</html> -->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Trade-ins Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+/* ================== BODY ================== */
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #f4f6f9;
+  margin: 0;
+  padding: 30px;
+  color: #1f2d3d;
+}
+
+/* ================== HEADINGS ================== */
+h1 {
+  text-align: center;
+  font-size: 2.5rem;
+  margin-bottom: 30px;
+  color: #1e3a8a;
+  animation: fadeIn 0.8s ease;
+}
+h2 {
+  font-size: 1.5rem;
+  margin: 20px 0 10px;
+  color: #334155;
+}
+
+/* ================== BUTTONS ================== */
+.download-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 40px;
+  animation: fadeInUp 1s ease;
+}
+.download-buttons button {
+  padding: 12px 28px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #2563eb, #1e40af);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(30,64,175,0.2);
+}
+.download-buttons button:hover {
+  background: linear-gradient(135deg, #1e40af, #1e3a8a);
+  transform: translateY(-2px);
+}
+
+/* ================== SUMMARY CARDS ================== */
+.cards-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 50px;
+}
+.card {
+  background: #e2e8f0;
+  border-radius: 16px;
+  padding: 25px 20px;
+  text-align: center;
+  width: 220px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  transform: scale(0.95);
+  opacity: 0;
+  animation: popIn 0.6s forwards;
+}
+.card:nth-child(1) { animation-delay: 0.1s; }
+.card:nth-child(2) { animation-delay: 0.2s; }
+.card:nth-child(3) { animation-delay: 0.3s; }
+.card:nth-child(4) { animation-delay: 0.4s; }
+.card:nth-child(5) { animation-delay: 0.5s; }
+.card:nth-child(6) { animation-delay: 0.6s; }
+.card h2 {
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+  color: #1e3a8a;
+}
+.card p {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #2563eb;
+}
+
+/* ================== TABLES ================== */
+.table-container {
+  overflow-x: auto;
+  margin-bottom: 50px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+th, td {
+  padding: 14px 18px;
+  text-align: center;
+  font-size: 0.95rem;
+}
+th {
+  background: #1e40af;
+  color: #fff;
+  font-weight: 600;
+}
+tbody tr {
+  opacity: 0;
+  animation: fadeInUp 0.6s forwards;
+}
+tbody tr:nth-child(1) { animation-delay: 0.1s; }
+tbody tr:nth-child(2) { animation-delay: 0.2s; }
+tbody tr:nth-child(3) { animation-delay: 0.3s; }
+tbody tr:nth-child(4) { animation-delay: 0.4s; }
+
+tr:nth-child(even) { background: #f1f5f9; }
+
+/* Darker shades so text stays visible */
+tr.top-performer { background: #1e40af; color: #fff; }
+tr.middle-performer { background: #2563eb; color: #fff; }
+tr.low-performer { background: #3b82f6; color: #fff; }
+
+/* ================== PROGRESS BARS ================== */
+.bar-cell {
+  display: flex;
+  justify-content: center;
+}
+.bar {
+  height: 14px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #2563eb, #3b82f6);
+  animation: growBar 1.2s ease forwards;
+}
+
+/* ================== DRILLDOWN CARDS ================== */
+.drilldown-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 30px;
+}
+.drilldown-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 25px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  flex: 1 1 450px;
+  min-width: 450px;
+  max-width: 600px;
+  animation: fadeInUp 0.8s ease;
+}
+.drilldown-card table { min-width: 100%; }
+
+/* ================== ANIMATIONS ================== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes popIn {
+  to { transform: scale(1); opacity: 1; }
+}
+@keyframes growBar {
+  from { width: 0; }
+  to { width: var(--bar-width, 70%); }
+}
+
+/* ================== RESPONSIVE ================== */
+@media(max-width: 900px) {
+  .cards-grid, .drilldown-container { flex-direction: column; align-items: center; }
+  .card, .drilldown-card { width: 90%; min-width: unset; }
+}
+
+
+</style>
+</head>
+<body>
+
+<h1>📊 Trade-ins Dashboard</h1>
+
+<div class="download-buttons">
+  <button id="downloadPNG">⬇️ Download PNG</button>
+  <button id="downloadPDF">⬇️ Download PDF</button>
+</div>
+
+<div class="cards-grid" id="summary-cards"></div>
+
+<h2>📊 Market Performance</h2>
+<div class="table-container">
+  <table id="market-table">
+    <thead>
+      <tr>
+        <th>Market</th>
+        <th>Total Trade-ins</th>
+        <th>Total Cost</th>
+        <th>Approved Count</th>
+        <th>Approved Cost</th>
+        <th>Not Approved Count</th>
+        <th>Not Approved Cost</th>
+        <th>Performance</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<div class="drilldown-container" id="drilldown" style="display:none;">
+  <div class="drilldown-card">
+    <h2>🏬 Store-wise Performance</h2>
+    <div class="table-container">
+      <table id="store-table">
+        <thead>
+          <tr>
+            <th>Store</th>
+            <th>Total Trade-ins</th>
+            <th>Total Cost</th>
+            <th>Approved Count</th>
+            <th>Approved Cost</th>
+            <th>Not Approved Count</th>
+            <th>Not Approved Cost</th>
+            <th>Performance</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="drilldown-card">
+    <h2>📋 Model-wise Performance</h2>
+    <div class="table-container">
+      <table id="model-table">
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>Total Trade-ins</th>
+            <th>Total Cost</th>
+            <th>Approved Count</th>
+            <th>Approved Cost</th>
+            <th>Not Approved Count</th>
+            <th>Not Approved Cost</th>
+            <th>Performance</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===================== DATA FETCH & LOGIC =====================
+const googleSheetCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSfrcSWw9-PyEe7nZs-BotPkvTPsln57Ba-2u6AFy8woMG0H21lObx0jMwCbbQYvw/pub?gid=838451932&single=true&output=csv";
+
+async function fetchData() {
+  try {
+    const res = await fetch(googleSheetCSV);
+    const csv = await res.text();
+    return csvToJson(csv);
+  } catch(err){ console.error(err); return []; }
+}
+
+function csvToJson(csv){
+  const lines = csv.split("\n").filter(l=>l.trim());
+  const headers = lines[0].split(",").map(h=>h.trim());
+  return lines.slice(1).map(l=>{
+    const values = l.split(",").map(v=>v.trim());
+    const obj = {}; headers.forEach((h,i)=>obj[h]=values[i]||""); return obj;
+  }).filter(r=>r["Market Name"]);
+}
+
+function parseNumber(v){ const n=parseFloat((v||"").replace(/[^0-9.\-]/g,"")); return isNaN(n)?0:n; }
+function formatCurrency(v){ return "$"+Number(v||0).toLocaleString(); }
+
+// ===================== SUMMARY CARDS =====================
+function createSummaryCards(data){
+  let totalCount = data.length, totalCost=0, approvedCount=0, approvedCost=0, notApprovedCount=0, notApprovedCost=0;
+  data.forEach(d=>{
+    const ti=parseNumber(d["TI Applied"]);
+    totalCost+=ti;
+    const status=(d["Status"]||"").toLowerCase();
+    if(status==="approved"){ approvedCount++; approvedCost+=ti; }
+    else if(status==="not approved"){ notApprovedCount++; notApprovedCost+=ti; }
+  });
+  const cards = [
+    {title:"Total Trade-ins Count", value:totalCount},
+    {title:"Total Trade-ins Cost", value:formatCurrency(totalCost)},
+    {title:"Approved Count", value:approvedCount},
+    {title:"Approved Cost", value:formatCurrency(approvedCost)},
+    {title:"Not Approved Count", value:notApprovedCount},
+    {title:"Not Approved Cost", value:formatCurrency(notApprovedCost)}
+  ];
+  const container=document.getElementById("summary-cards"); container.innerHTML="";
+  cards.forEach(c=>{
+    const card=document.createElement("div"); card.className="card";
+    card.innerHTML=`<h2>${c.title}</h2><p>${c.value}</p>`;
+    container.appendChild(card);
+  });
+}
+
+// ===================== TABLE CREATION =====================
+function createTable(tableId, data, keyField){
+  const tableData={};
+  data.forEach(d=>{
+    const key=d[keyField]||"Unknown";
+    if(!tableData[key]) tableData[key]={total:0,totalCost:0,approvedCount:0,approvedCost:0,notApprovedCount:0,notApprovedCost:0};
+    const ti=parseNumber(d["TI Applied"]);
+    tableData[key].total++; tableData[key].totalCost+=ti;
+    const status=(d["Status"]||"").toLowerCase();
+    if(status==="approved"){ tableData[key].approvedCount++; tableData[key].approvedCost+=ti; }
+    else if(status==="not approved"){ tableData[key].notApprovedCount++; tableData[key].notApprovedCost+=ti; }
+  });
+  const sortedKeys=Object.keys(tableData).sort((a,b)=>tableData[b].approvedCost-tableData[a].approvedCost);
+  const tbody=document.querySelector(`#${tableId} tbody`); tbody.innerHTML="";
+  const maxApproved = sortedKeys.length?Math.max(...sortedKeys.map(k=>tableData[k].approvedCost)):1;
+  sortedKeys.forEach((k,idx)=>{
+    const val=tableData[k];
+    let perfClass="low-performer"; if(idx<Math.ceil(sortedKeys.length*0.2)) perfClass="top-performer"; else if(idx<Math.ceil(sortedKeys.length*0.5)) perfClass="middle-performer";
+    const row=document.createElement("tr"); row.className=perfClass;
+    row.innerHTML=`<td class="key-cell" style="cursor:pointer">${k}</td>
+      <td>${val.total}</td>
+      <td>${formatCurrency(val.totalCost)}</td>
+      <td>${val.approvedCount}</td>
+      <td>${formatCurrency(val.approvedCost)}</td>
+      <td>${val.notApprovedCount}</td>
+      <td>${formatCurrency(val.notApprovedCost)}</td>
+      <td><div class="bar-cell"><div class="bar" style="width:${(val.approvedCost/maxApproved)*100}%"></div></div></td>`;
+    tbody.appendChild(row);
+    if(tableId==="market-table") row.querySelector(".key-cell").addEventListener("click",()=>createDrilldown(data,k));
+  });
+}
+
+function createMarketTable(data){ createTable("market-table", data, "Market Name"); }
+function createStoreTable(data, market){ createTable("store-table", data.filter(d=>d["Market Name"]===market), "Store Name"); }
+function createModelTable(data, market){ createTable("model-table", data.filter(d=>d["Market Name"]===market), "Model"); }
+
+function createDrilldown(data, market){
+  document.getElementById("drilldown").style.display="flex";
+  createStoreTable(data, market);
+  createModelTable(data, market);
+}
+
+// ===================== INIT =====================
+async function initDashboard(){
+  const data=await fetchData();
+  createSummaryCards(data);
+  createMarketTable(data);
+
+  document.getElementById("downloadPNG").addEventListener("click", ()=>{
+    html2canvas(document.body).then(canvas=>{
+      const link=document.createElement("a");
+      link.download="tradeins_dashboard.png"; link.href=canvas.toDataURL("image/png"); link.click();
+    });
+  });
+
+  document.getElementById("downloadPDF").addEventListener("click", ()=>{
+    html2canvas(document.body).then(canvas=>{
+      const imgData=canvas.toDataURL("image/png"); const {jsPDF}=window.jspdf;
+      const pdf=new jsPDF("p","mm","a4"); const pageWidth=pdf.internal.pageSize.getWidth();
+      const imgWidth=pageWidth-20; const imgHeight=(canvas.height*imgWidth)/canvas.width;
+      pdf.addImage(imgData,"PNG",10,10,imgWidth,imgHeight); pdf.save("tradeins_dashboard.pdf");
+    });
+  });
+}
+
+initDashboard();
+</script>
+</script>
+
+</body>
 </html>
+
+
